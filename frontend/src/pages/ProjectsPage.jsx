@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, X, Users, Calendar } from 'lucide-react'
+import { Plus, X, Users, Calendar, Clock, Coffee, Target, TrendingUp } from 'lucide-react'
 
 const ProjectsPage = () => {
     const [isModalOpen, setIsModalOpen] = useState(false)
@@ -9,6 +9,16 @@ const ProjectsPage = () => {
         description: '',
         author: ''
     })
+
+    // Personal work stats
+    const [workStats] = useState({
+        workedMinutes: 195, // 3h 15m
+        isWorking: true,
+        lastBreak: '1.5 hours ago',
+        tasksCompleted: 8,
+        projectsActive: 2
+    })
+
     const [projects, setProjects] = useState([
         {
             id: 1,
@@ -79,6 +89,52 @@ const ProjectsPage = () => {
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     }
 
+    const formatWorkTime = (minutes) => {
+        const hours = Math.floor(minutes / 60)
+        const mins = minutes % 60
+        return `${hours}h ${mins}m`
+    }
+
+    const getSuggestion = (workedMinutes, isWorking) => {
+        if (!isWorking) {
+            return {
+                text: 'On break',
+                color: 'bg-green-100 text-green-700 border-green-200',
+                icon: Coffee,
+                message: 'Enjoy your break! 😊'
+            }
+        }
+        if (workedMinutes >= 240) { // 4+ hours
+            return {
+                text: 'Take a break!',
+                color: 'bg-red-100 text-red-700 border-red-200',
+                icon: Coffee,
+                message: 'You\'ve been working for a while. Time for a break! 🌟'
+            }
+        } else if (workedMinutes >= 180) { // 3+ hours
+            return {
+                text: 'Break soon',
+                color: 'bg-orange-100 text-orange-700 border-orange-200',
+                icon: Coffee,
+                message: 'Consider taking a break in the next 15-30 minutes 💪'
+            }
+        } else if (workedMinutes >= 120) { // 2+ hours
+            return {
+                text: 'Keep focused',
+                color: 'bg-blue-100 text-blue-700 border-blue-200',
+                icon: Target,
+                message: 'Great momentum! Keep up the good work 🚀'
+            }
+        } else {
+            return {
+                text: 'Focus time',
+                color: 'bg-green-100 text-green-700 border-green-200',
+                icon: Target,
+                message: 'Fresh start! Perfect time to tackle important tasks ✨'
+            }
+        }
+    }
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -86,6 +142,81 @@ const ProjectsPage = () => {
                     <h1 className="text-3xl font-bold text-slate-800 mb-2">Projects</h1>
                     <p className="text-slate-600">Manage and track all your projects</p>
                 </div>
+            </div>
+
+            {/* Overall Work Stats Section */}
+            <div className="bg-linear-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                        <TrendingUp className="w-6 h-6 text-blue-600" />
+                        <h2 className="text-xl font-bold text-slate-800">Today's Activity</h2>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${workStats.isWorking ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
+                        {workStats.isWorking ? '🟢 Working' : '⚪ On Break'}
+                    </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                    {/* Work Time */}
+                    <div className="bg-white rounded-lg p-4 border border-blue-100">
+                        <div className="flex items-center gap-2 text-slate-600 mb-2">
+                            <Clock className="w-4 h-4" />
+                            <span className="text-sm font-medium">Work Time</span>
+                        </div>
+                        <p className="text-2xl font-bold text-slate-800">{formatWorkTime(workStats.workedMinutes)}</p>
+                    </div>
+
+                    {/* Last Break */}
+                    <div className="bg-white rounded-lg p-4 border border-blue-100">
+                        <div className="flex items-center gap-2 text-slate-600 mb-2">
+                            <Coffee className="w-4 h-4" />
+                            <span className="text-sm font-medium">Last Break</span>
+                        </div>
+                        <p className="text-lg font-semibold text-slate-800">{workStats.lastBreak}</p>
+                    </div>
+
+                    {/* Tasks Completed */}
+                    <div className="bg-white rounded-lg p-4 border border-blue-100">
+                        <div className="flex items-center gap-2 text-slate-600 mb-2">
+                            <Target className="w-4 h-4" />
+                            <span className="text-sm font-medium">Tasks Done</span>
+                        </div>
+                        <p className="text-2xl font-bold text-slate-800">{workStats.tasksCompleted}</p>
+                    </div>
+
+                    {/* Active Projects */}
+                    <div className="bg-white rounded-lg p-4 border border-blue-100">
+                        <div className="flex items-center gap-2 text-slate-600 mb-2">
+                            <Users className="w-4 h-4" />
+                            <span className="text-sm font-medium">Active Projects</span>
+                        </div>
+                        <p className="text-2xl font-bold text-slate-800">{workStats.projectsActive}</p>
+                    </div>
+                </div>
+
+                {/* Suggestion Banner */}
+                {(() => {
+                    const suggestion = getSuggestion(workStats.workedMinutes, workStats.isWorking)
+                    const SuggestionIcon = suggestion.icon
+                    return (
+                        <div className={`flex items-center justify-between p-4 rounded-lg border ${suggestion.color}`}>
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-white rounded-lg">
+                                    <SuggestionIcon className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <p className="font-bold text-sm">{suggestion.text}</p>
+                                    <p className="text-sm opacity-90">{suggestion.message}</p>
+                                </div>
+                            </div>
+                            {suggestion.text !== 'On break' && (
+                                <button className="px-4 py-2 bg-white rounded-lg font-semibold text-sm hover:shadow-md transition-all">
+                                    {suggestion.text.includes('break') || suggestion.text.includes('Break') ? 'Take Break' : 'Keep Going'}
+                                </button>
+                            )}
+                        </div>
+                    )
+                })()}
             </div>
 
             {/* Projects Grid */}
