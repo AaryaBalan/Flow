@@ -37,7 +37,7 @@ exports.createProject = (req, res) => {
         const projectId = this.lastID;
 
         // Add the creator as a member of the project
-        const memberQuery = `INSERT INTO ProjectMembers (projectId, userId) VALUES (?, ?)`;
+        const memberQuery = `INSERT INTO ProjectMembers (projectId, userId, invitationStatus) VALUES (?, ?, 'approved')`;
 
         db.run(memberQuery, [projectId, authorId], (memberErr) => {
             if (memberErr) {
@@ -130,55 +130,42 @@ exports.joinProject = (req, res) => {
             }
 
             if (existingMember) {
+                if (existingMember.invitationStatus === 'pending') {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Your request is pending approval'
+                    });
+                }
                 return res.status(400).json({
                     success: false,
                     message: 'You are already a member of this project'
                 });
             }
 
-            // Add user to project
-            const addMemberQuery = `INSERT INTO ProjectMembers (projectId, userId) VALUES (?, ?)`;
+            // Add user to project with pending status
+            const addMemberQuery = `INSERT INTO ProjectMembers (projectId, userId, invitationStatus) VALUES (?, ?, 'pending')`;
 
             db.run(addMemberQuery, [project.id, userId], (addErr) => {
                 if (addErr) {
-                    console.error('Error joining project:', addErr.message);
+                    console.error('Error creating join request:', addErr.message);
                     return res.status(500).json({
                         success: false,
-                        message: 'Error joining project',
+                        message: 'Error creating join request',
                         error: addErr.message
                     });
                 }
 
-                // Fetch updated project with member count
-                const fetchQuery = `
-                    SELECT p.*, COUNT(pm.userId) as peopleJoined
-                    FROM Projects p
-                    LEFT JOIN ProjectMembers pm ON p.id = pm.projectId
-                    WHERE p.id = ?
-                    GROUP BY p.id
-                `;
-
-                db.get(fetchQuery, [project.id], (fetchErr, updatedProject) => {
-                    if (fetchErr) {
-                        console.error('Error fetching project:', fetchErr.message);
-                        return res.status(500).json({
-                            success: false,
-                            message: 'Joined but error fetching project details'
-                        });
-                    }
-
-                    res.status(200).json({
-                        success: true,
-                        message: `Successfully joined "${project.title}"!`,
-                        project: updatedProject
-                    });
+                res.status(200).json({
+                    success: true,
+                    message: `Join request sent for "${project.title}". Waiting for approval.`,
+                    project: project
                 });
             });
         });
     });
 };
 
-// Get all projects for a specific user
+// Get all projects for a specific user (including pending)
 exports.getUserProjects = (req, res) => {
     const { userId } = req.params;
 
@@ -190,13 +177,16 @@ exports.getUserProjects = (req, res) => {
     }
 
     const query = `
-        SELECT p.*, COUNT(pm2.userId) as peopleJoined
+        SELECT 
+            p.*, 
+            pm.invitationStatus,
+            COUNT(pm2.userId) as peopleJoined
         FROM Projects p
         INNER JOIN ProjectMembers pm ON p.id = pm.projectId
-        LEFT JOIN ProjectMembers pm2 ON p.id = pm2.projectId
-        WHERE pm.userId = ?
+        LEFT JOIN ProjectMembers pm2 ON p.id = pm2.projectId AND pm2.invitationStatus = 'approved'
+        WHERE pm.userId = ? AND pm.invitationStatus IN ('approved', 'pending')
         GROUP BY p.id
-        ORDER BY p.createdAt DESC
+        ORDER BY pm.invitationStatus ASC, p.createdAt DESC
     `;
 
     db.all(query, [userId], (err, projects) => {
@@ -304,7 +294,7 @@ exports.getProjectMembers = (req, res) => {
         FROM ProjectMembers pm
         INNER JOIN Users u ON pm.userId = u.id
         INNER JOIN Projects p ON pm.projectId = p.id
-        WHERE pm.projectId = ?
+        WHERE pm.projectId = ? AND pm.invitationStatus = 'approved'
         ORDER BY isOwner DESC, pm.joinedAt ASC
     `;
 
@@ -321,6 +311,130 @@ exports.getProjectMembers = (req, res) => {
         res.status(200).json({
             success: true,
             members: members || []
+        });
+    });
+};
+
+// Get pending join requests for a project
+exports.getPendingRequests = (req, res) => {
+    const { projectId } = req.params;
+
+    if (!projectId) {
+        return res.status(400).json({
+            success: false,
+            message: 'Project ID is required'
+        });
+    }
+
+    const query = `
+        SELECT 
+            u.id,
+            u.name,
+            u.email,
+            u.designation,
+            u.company,
+            u.location,
+            pm.joinedAt as requestedAt
+        FROM ProjectMembers pm
+        INNER JOIN Users u ON pm.userId = u.id
+        WHERE pm.projectId = ? AND pm.invitationStatus = 'pending'
+        ORDER BY pm.joinedAt DESC
+    `;
+
+    db.all(query, [projectId], (err, requests) => {
+        if (err) {
+            console.error('Error fetching pending requests:', err.message);
+            return res.status(500).json({
+                success: false,
+                message: 'Error fetching pending requests',
+                error: err.message
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            requests: requests || []
+        });
+    });
+};
+
+// Approve a join request
+exports.approveRequest = (req, res) => {
+    const { projectId, userId } = req.params;
+
+    if (!projectId || !userId) {
+        return res.status(400).json({
+            success: false,
+            message: 'Project ID and User ID are required'
+        });
+    }
+
+    const query = `
+        UPDATE ProjectMembers 
+        SET invitationStatus = 'approved'
+        WHERE projectId = ? AND userId = ? AND invitationStatus = 'pending'
+    `;
+
+    db.run(query, [projectId, userId], function (err) {
+        if (err) {
+            console.error('Error approving request:', err.message);
+            return res.status(500).json({
+                success: false,
+                message: 'Error approving request',
+                error: err.message
+            });
+        }
+
+        if (this.changes === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Request not found or already processed'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Join request approved successfully'
+        });
+    });
+};
+
+// Reject a join request
+exports.rejectRequest = (req, res) => {
+    const { projectId, userId } = req.params;
+
+    if (!projectId || !userId) {
+        return res.status(400).json({
+            success: false,
+            message: 'Project ID and User ID are required'
+        });
+    }
+
+    const query = `
+        DELETE FROM ProjectMembers 
+        WHERE projectId = ? AND userId = ? AND invitationStatus = 'pending'
+    `;
+
+    db.run(query, [projectId, userId], function (err) {
+        if (err) {
+            console.error('Error rejecting request:', err.message);
+            return res.status(500).json({
+                success: false,
+                message: 'Error rejecting request',
+                error: err.message
+            });
+        }
+
+        if (this.changes === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Request not found or already processed'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Join request rejected'
         });
     });
 };

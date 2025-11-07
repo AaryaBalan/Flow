@@ -9,13 +9,28 @@ const PeoplePage = () => {
     const [teamMembers, setTeamMembers] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [pendingRequests, setPendingRequests] = useState([])
+    const [currentUser] = useState(() => JSON.parse(localStorage.getItem('user') || '{}'))
+    const [project, setProject] = useState(null)
 
-    // Fetch project members
+    // Fetch project details and members
     useEffect(() => {
         if (projectId) {
+            fetchProjectDetails()
             fetchProjectMembers()
+            fetchPendingRequests()
         }
     }, [projectId])
+
+    const fetchProjectDetails = async () => {
+        try {
+            const response = await axios.get(`http://localhost:3000/api/projects/${projectId}`)
+            if (response.data.success) {
+                setProject(response.data.project)
+            }
+        } catch (error) {
+            console.error('Error fetching project details:', error)
+        }
+    }
 
     const fetchProjectMembers = async () => {
         try {
@@ -33,6 +48,17 @@ const PeoplePage = () => {
         }
     }
 
+    const fetchPendingRequests = async () => {
+        try {
+            const response = await axios.get(`http://localhost:3000/api/projects/${projectId}/requests`)
+            if (response.data.success) {
+                setPendingRequests(response.data.requests)
+            }
+        } catch (error) {
+            console.error('Error fetching pending requests:', error)
+        }
+    }
+
     const getInitials = (name) => {
         if (!name) return '?'
         const names = name.split(' ')
@@ -42,21 +68,39 @@ const PeoplePage = () => {
         return names[0][0].toUpperCase()
     }
 
-    const handleApprove = (request) => {
-        // Add to team members
-        setTeamMembers([...teamMembers, {
-            id: request.id,
-            name: request.name,
-            role: request.role,
-            email: request.email,
-            avatar: request.avatar
-        }])
-        // Remove from pending requests
-        setPendingRequests(pendingRequests.filter(req => req.id !== request.id))
+    const handleApprove = async (request) => {
+        try {
+            const response = await axios.put(
+                `http://localhost:3000/api/projects/${projectId}/requests/${request.id}/approve`
+            )
+
+            if (response.data.success) {
+                toast.success(`${request.name} has been approved!`)
+                // Refresh both lists
+                fetchProjectMembers()
+                fetchPendingRequests()
+            }
+        } catch (error) {
+            console.error('Error approving request:', error)
+            toast.error('Failed to approve request')
+        }
     }
 
-    const handleDeny = (requestId) => {
-        setPendingRequests(pendingRequests.filter(req => req.id !== requestId))
+    const handleDeny = async (requestId, userName) => {
+        try {
+            const response = await axios.put(
+                `http://localhost:3000/api/projects/${projectId}/requests/${requestId}/reject`
+            )
+
+            if (response.data.success) {
+                toast.success(`Request from ${userName} has been rejected`)
+                // Remove from pending requests
+                setPendingRequests(pendingRequests.filter(req => req.id !== requestId))
+            }
+        } catch (error) {
+            console.error('Error rejecting request:', error)
+            toast.error('Failed to reject request')
+        }
     }
 
     const formatDate = (dateString) => {
@@ -80,8 +124,8 @@ const PeoplePage = () => {
             </div>
 
             {/* Pending Approval Requests */}
-            {pendingRequests.length > 0 && (
-                <div className="bg-linear-to-r bg-[#eef2ff] border border-[#3352fa] rounded-xl p-6">
+            {project && project.authorId === currentUser.id && pendingRequests.length > 0 && (
+                <div className="bg-white border border-indigo-200 rounded-xl p-6 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
                         <div>
                             <h3 className="text-xl font-bold text-slate-800">Pending Approval Requests</h3>
@@ -91,22 +135,32 @@ const PeoplePage = () => {
 
                     <div className="space-y-3">
                         {pendingRequests.map(request => (
-                            <div key={request.id} className="bg-[#eef2ff] border border-[#3352fa] rounded-lg p-4 shadow-sm">
+                            <div key={request.id} className="bg-slate-50 border border-slate-200 rounded-lg p-4">
                                 <div className="flex items-center gap-4">
                                     {/* Avatar */}
-                                    <div className="w-12 h-12 bg-linear-to-br from-amber-500 to-orange-500 rounded-lg flex items-center justify-center shrink-0">
-                                        <span className="text-lg font-bold text-white">{request.avatar}</span>
+                                    <div className="w-12 h-12 bg-linear-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center shrink-0">
+                                        <span className="text-lg font-bold text-white">{getInitials(request.name)}</span>
                                     </div>
 
                                     {/* Info */}
                                     <div className="flex-1 min-w-0">
                                         <h4 className="text-base font-semibold text-slate-800">{request.name}</h4>
-                                        <p className="text-sm text-slate-600">{request.role}</p>
+                                        <p className="text-sm text-slate-600">{request.designation || 'Team Member'}</p>
                                         <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
                                             <Mail className="w-3 h-3" />
                                             <span className="truncate">{request.email}</span>
-                                            <span>•</span>
-                                            <span>Requested {formatDate(request.requestedAt)}</span>
+                                            {request.company && (
+                                                <>
+                                                    <span>•</span>
+                                                    <span>{request.company}</span>
+                                                </>
+                                            )}
+                                            {request.requestedAt && (
+                                                <>
+                                                    <span>•</span>
+                                                    <span>Requested {formatDate(request.requestedAt)}</span>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
 
@@ -121,7 +175,7 @@ const PeoplePage = () => {
                                             <span className="hidden sm:inline">Approve</span>
                                         </button>
                                         <button
-                                            onClick={() => handleDeny(request.id)}
+                                            onClick={() => handleDeny(request.id, request.name)}
                                             className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                                             title="Deny request"
                                         >

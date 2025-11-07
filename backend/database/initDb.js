@@ -69,6 +69,7 @@ function initializeTables() {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 projectId INTEGER NOT NULL,
                 userId INTEGER NOT NULL,
+                invitationStatus TEXT DEFAULT 'approved',
                 joinedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE(projectId, userId),
                 FOREIGN KEY (projectId) REFERENCES Projects(id) ON DELETE CASCADE,
@@ -79,6 +80,15 @@ function initializeTables() {
                 console.error('Error creating ProjectMembers table:', err.message);
             } else {
                 console.log('ProjectMembers table ready');
+
+                // Add invitationStatus column to existing table if it doesn't exist
+                db.run(`
+                    ALTER TABLE ProjectMembers ADD COLUMN invitationStatus TEXT DEFAULT 'approved'
+                `, (alterErr) => {
+                    if (alterErr && !alterErr.message.includes('duplicate column')) {
+                        console.error('Error adding invitationStatus column:', alterErr.message);
+                    }
+                });
             }
         });
 
@@ -93,6 +103,10 @@ function initializeTables() {
 
         db.run(`CREATE INDEX IF NOT EXISTS idx_projectMembers_projectId ON ProjectMembers(projectId)`, (err) => {
             if (err) console.error('Error creating projectId index:', err.message);
+        });
+
+        db.run(`CREATE INDEX IF NOT EXISTS idx_projectMembers_status ON ProjectMembers(invitationStatus)`, (err) => {
+            if (err) console.error('Error creating invitationStatus index:', err.message);
         });
     });
 }

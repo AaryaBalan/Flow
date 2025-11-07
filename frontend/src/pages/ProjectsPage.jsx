@@ -100,12 +100,14 @@ const ProjectsPage = () => {
             return
         }
 
+        const authorName = currentUser?.name || currentUser?.fullName || currentUser?.email?.split('@')[0] || 'User'
+
         try {
             const response = await axios.post('http://localhost:3000/api/projects/create', {
                 title: formData.title,
                 description: formData.description,
                 authorId: currentUser.id,
-                authorName: formData.author || currentUser.fullName
+                authorName: authorName
             })
 
             if (response.data.success) {
@@ -325,102 +327,123 @@ const ProjectsPage = () => {
                         </div>
                     </div>
                 ) : (
-                    projects.map(project => (
-                        <Link
-                            key={project.id}
-                            to={`/project/${project.id}`}
-                            className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-slate-100 overflow-hidden block"
-                        >
-                            {/* Project Header */}
-                            <div className="p-6 pb-4">
-                                <div className="flex items-start gap-4 mb-4">
-                                    {/* Profile Image with First Letter */}
-                                    <div className="w-14 h-14 rounded-xl bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center shrink-0 shadow-md">
-                                        <span className="text-2xl font-bold text-white">{getInitials(project.title)}</span>
-                                    </div>
+                    projects.map(project => {
+                        const isPending = project.invitationStatus === 'pending';
+                        const ProjectWrapper = isPending ? 'div' : Link;
+                        const wrapperProps = isPending
+                            ? { className: "bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden block opacity-75 cursor-not-allowed" }
+                            : {
+                                to: `/project/${project.id}`,
+                                className: "bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-slate-100 overflow-hidden block"
+                            };
 
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-start justify-between gap-2 mb-2">
-                                            <h3 className="text-lg font-semibold text-slate-800 truncate">{project.title}</h3>
-                                            <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${project.status === 'Active'
-                                                ? 'bg-green-100 text-green-700'
-                                                : 'bg-blue-100 text-blue-700'
-                                                }`}>
-                                                {project.status}
-                                            </span>
-                                        </div>
-                                        <p className="text-sm text-slate-600 line-clamp-2 mb-3">
-                                            {project.description}
+                        return (
+                            <ProjectWrapper
+                                key={project.id}
+                                {...wrapperProps}
+                            >
+                                {/* Pending Banner */}
+                                {isPending && (
+                                    <div className="bg-amber-100 border-b border-amber-200 px-4 py-2">
+                                        <p className="text-sm font-semibold text-amber-800 text-center">
+                                            Waiting for project owner approval
                                         </p>
-                                    </div>
-                                </div>
-
-                                {/* Author */}
-                                <div className="mb-3">
-                                    <p className="text-sm text-slate-500">
-                                        <span className="font-medium text-slate-700">Author:</span> {project.authorName}
-                                    </p>
-                                </div>
-
-                                {/* Join Code - Only show for project owner */}
-                                {project.authorId == currentUser?.id && (
-                                    <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                                        <div className="flex items-center justify-between gap-2">
-                                            <div className="flex-1">
-                                                <p className="text-xs text-slate-600 mb-1 font-medium">Join Code</p>
-                                                <p className="text-lg font-bold text-blue-600 font-mono">{project.joinCode}</p>
-                                            </div>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.preventDefault()
-                                                    handleCopyCode(project.joinCode)
-                                                }}
-                                                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-1 text-sm font-medium shrink-0"
-                                            >
-                                                {isCopied ? (
-                                                    <>
-                                                        <Check className="w-4 h-4" />
-                                                        <span className="hidden sm:inline">Copied</span>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <Copy className="w-4 h-4" />
-                                                        <span className="hidden sm:inline">Copy</span>
-                                                    </>
-                                                )}
-                                            </button>
-                                        </div>
                                     </div>
                                 )}
 
-                                {/* Meta Info */}
-                                <div className="flex items-center gap-4 mb-4 text-sm text-slate-600">
-                                    <div className="flex items-center gap-1.5">
-                                        <Users className="w-4 h-4" />
-                                        <span>{project.peopleJoined} joined</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5">
-                                        <Calendar className="w-4 h-4" />
-                                        <span>{formatDate(project.createdAt)}</span>
-                                    </div>
-                                </div>
+                                {/* Project Header */}
+                                <div className="p-6 pb-4">
+                                    <div className="flex items-start gap-4 mb-4">
+                                        {/* Profile Image with First Letter */}
+                                        <div className={`w-14 h-14 rounded-xl ${isPending ? 'bg-linear-to-br from-amber-500 to-orange-500' : 'bg-linear-to-br from-blue-600 to-indigo-600'} flex items-center justify-center shrink-0 shadow-md`}>
+                                            <span className="text-2xl font-bold text-white">{getInitials(project.title)}</span>
+                                        </div>
 
-                                {/* Progress */}
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between text-sm">
-                                        <span className="text-slate-600 font-medium">Progress</span>
-                                        <span className="font-semibold text-slate-800">{project.progress}%</span>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-start justify-between gap-2 mb-2">
+                                                <h3 className="text-lg font-semibold text-slate-800 truncate">{project.title}</h3>
+                                                <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${isPending
+                                                        ? 'bg-amber-100 text-amber-700 border border-amber-300'
+                                                        : project.status === 'Active'
+                                                            ? 'bg-green-100 text-green-700'
+                                                            : 'bg-blue-100 text-blue-700'
+                                                    }`}>
+                                                    {isPending ? 'Pending' : project.status}
+                                                </span>
+                                            </div>
+                                            <p className="text-sm text-slate-600 line-clamp-2 mb-3">
+                                                {project.description}
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div className="w-full bg-slate-200 rounded-full h-2">
-                                        <div
-                                            className="bg-linear-to-r from-blue-600 to-indigo-600 h-2 rounded-full transition-all"
-                                            style={{ width: `${project.progress}%` }}
-                                        />
+
+                                    {/* Author */}
+                                    <div className="mb-3">
+                                        <p className="text-sm text-slate-500">
+                                            <span className="font-medium text-slate-700">Author:</span> {project.authorName}
+                                        </p>
+                                    </div>
+
+                                    {/* Join Code - Only show for project owner and approved members */}
+                                    {!isPending && project.authorId == currentUser?.id && (
+                                        <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                            <div className="flex items-center justify-between gap-2">
+                                                <div className="flex-1">
+                                                    <p className="text-xs text-slate-600 mb-1 font-medium">Join Code</p>
+                                                    <p className="text-lg font-bold text-blue-600 font-mono">{project.joinCode}</p>
+                                                </div>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.preventDefault()
+                                                        handleCopyCode(project.joinCode)
+                                                    }}
+                                                    className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-1 text-sm font-medium shrink-0"
+                                                >
+                                                    {isCopied ? (
+                                                        <>
+                                                            <Check className="w-4 h-4" />
+                                                            <span className="hidden sm:inline">Copied</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Copy className="w-4 h-4" />
+                                                            <span className="hidden sm:inline">Copy</span>
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Meta Info */}
+                                    <div className="flex items-center gap-4 mb-4 text-sm text-slate-600">
+                                        <div className="flex items-center gap-1.5">
+                                            <Users className="w-4 h-4" />
+                                            <span>{project.peopleJoined} joined</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <Calendar className="w-4 h-4" />
+                                            <span>{formatDate(project.createdAt)}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Progress */}
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="text-slate-600 font-medium">Progress</span>
+                                            <span className="font-semibold text-slate-800">{project.progress}%</span>
+                                        </div>
+                                        <div className="w-full bg-slate-200 rounded-full h-2">
+                                            <div
+                                                className={`${isPending ? 'bg-linear-to-r from-amber-500 to-orange-500' : 'bg-linear-to-r from-blue-600 to-indigo-600'} h-2 rounded-full transition-all`}
+                                                style={{ width: `${project.progress}%` }}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </Link>
-                    ))
+                            </ProjectWrapper>
+                        );
+                    })
                 )}
             </div>
 
@@ -525,18 +548,17 @@ const ProjectsPage = () => {
                             {/* Author Field */}
                             <div>
                                 <label htmlFor="author" className="block text-sm font-semibold text-slate-700 mb-2">
-                                    Author Name *
+                                    Author Name
                                 </label>
                                 <input
                                     type="text"
                                     id="author"
                                     name="author"
-                                    value={formData.author || currentUser?.fullName || ''}
-                                    onChange={handleInputChange}
-                                    required
-                                    placeholder="Enter your name"
-                                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    value={currentUser?.name?.toUpperCase() || currentUser?.email?.split('@')[0] || 'User'}
+                                    readOnly
+                                    className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-slate-50 text-slate-700 font-semibold cursor-not-allowed"
                                 />
+                                <p className="text-xs text-slate-500 mt-2">You will be set as the project author</p>
                             </div>
 
                             {/* Action Buttons */}

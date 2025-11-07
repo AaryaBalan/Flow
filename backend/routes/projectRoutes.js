@@ -14,6 +14,15 @@ router.get('/user/:userId', projectControllers.getUserProjects);
 // Get project members
 router.get('/:projectId/members', projectControllers.getProjectMembers);
 
+// Get pending join requests
+router.get('/:projectId/requests', projectControllers.getPendingRequests);
+
+// Approve a join request
+router.put('/:projectId/requests/:userId/approve', projectControllers.approveRequest);
+
+// Reject a join request
+router.put('/:projectId/requests/:userId/reject', projectControllers.rejectRequest);
+
 // Get project by ID
 router.get('/:projectId', projectControllers.getProjectById);
 
