@@ -9,7 +9,7 @@ const ProjectsPage = () => {
     const [isJoinModalOpen, setIsJoinModalOpen] = useState(false)
     const [joinCode, setJoinCode] = useState('')
     const [joinCodeInput, setJoinCodeInput] = useState('')
-    const [isCopied, setIsCopied] = useState(false)
+    const [copiedCodeId, setCopiedCodeId] = useState(null) // Track which code was copied
     const [isLoading, setIsLoading] = useState(true)
     const [currentUser, setCurrentUser] = useState(null)
     const [formData, setFormData] = useState({
@@ -36,7 +36,7 @@ const ProjectsPage = () => {
         if (isModalOpen) {
             const code = Math.floor(100000 + Math.random() * 900000).toString()
             setJoinCode(code)
-            setIsCopied(false)
+            setCopiedCodeId(null) // Reset copied state when modal opens
         }
     }, [isModalOpen])
 
@@ -81,12 +81,12 @@ const ProjectsPage = () => {
         setFormData(prev => ({ ...prev, [name]: value }))
     }
 
-    const handleCopyCode = async (code) => {
+    const handleCopyCode = async (code, codeId) => {
         try {
             await navigator.clipboard.writeText(code)
-            setIsCopied(true)
+            setCopiedCodeId(codeId)
             toast.success('Join code copied to clipboard!')
-            setTimeout(() => setIsCopied(false), 2000)
+            setTimeout(() => setCopiedCodeId(null), 2000)
         } catch (error) {
             toast.error('Failed to copy join code')
         }
@@ -215,13 +215,6 @@ const ProjectsPage = () => {
                     <h1 className="text-3xl font-bold text-slate-800 mb-2">Projects</h1>
                     <p className="text-slate-600">Manage and track all your projects</p>
                 </div>
-                <button
-                    onClick={() => setIsJoinModalOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all shadow-sm hover:shadow-md"
-                >
-                    <UserPlus className="w-5 h-5" />
-                    <span className="hidden sm:inline">Join Project</span>
-                </button>
             </div>
 
             {/* Overall Work Stats Section */}
@@ -363,10 +356,10 @@ const ProjectsPage = () => {
                                             <div className="flex items-start justify-between gap-2 mb-2">
                                                 <h3 className="text-lg font-semibold text-slate-800 truncate">{project.title}</h3>
                                                 <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${isPending
-                                                        ? 'bg-amber-100 text-amber-700 border border-amber-300'
-                                                        : project.status === 'Active'
-                                                            ? 'bg-green-100 text-green-700'
-                                                            : 'bg-blue-100 text-blue-700'
+                                                    ? 'bg-amber-100 text-amber-700 border border-amber-300'
+                                                    : project.status === 'Active'
+                                                        ? 'bg-green-100 text-green-700'
+                                                        : 'bg-blue-100 text-blue-700'
                                                     }`}>
                                                     {isPending ? 'Pending' : project.status}
                                                 </span>
@@ -385,21 +378,21 @@ const ProjectsPage = () => {
                                     </div>
 
                                     {/* Join Code - Only show for project owner and approved members */}
-                                    {!isPending && project.authorId == currentUser?.id && (
-                                        <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                    {!isPending && project.authorId == currentUser?.id ? (
+                                        <div className="mb-3 p-3 bg-green-50 rounded-lg">
                                             <div className="flex items-center justify-between gap-2">
                                                 <div className="flex-1">
                                                     <p className="text-xs text-slate-600 mb-1 font-medium">Join Code</p>
-                                                    <p className="text-lg font-bold text-blue-600 font-mono">{project.joinCode}</p>
+                                                    <p className="text-lg font-bold text-green-600 font-mono">{project.joinCode}</p>
                                                 </div>
                                                 <button
                                                     onClick={(e) => {
                                                         e.preventDefault()
-                                                        handleCopyCode(project.joinCode)
+                                                        handleCopyCode(project.joinCode, `project-${project.id}`)
                                                     }}
-                                                    className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-1 text-sm font-medium shrink-0"
+                                                    className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center gap-1 text-sm font-medium shrink-0"
                                                 >
-                                                    {isCopied ? (
+                                                    {copiedCodeId === `project-${project.id}` ? (
                                                         <>
                                                             <Check className="w-4 h-4" />
                                                             <span className="hidden sm:inline">Copied</span>
@@ -411,6 +404,18 @@ const ProjectsPage = () => {
                                                         </>
                                                     )}
                                                 </button>
+                                            </div>
+                                        </div>
+                                    ) : !isPending && (
+                                        <div className="mb-3 py-4 px-3 bg-blue-50 rounded-lg">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-white rounded-lg shadow-sm">
+                                                    <Users className="w-5 h-5 text-indigo-600" />
+                                                </div>
+                                                <div className='flex flex-col gap-y-1.5'>
+                                                    <p className="text-xs text-blue-700 font-semibold">Team Member</p>
+                                                    <p className="text-sm text-slate-700 font-medium">Collaborating on this project</p>
+                                                </div>
                                             </div>
                                         </div>
                                     )}
@@ -447,14 +452,26 @@ const ProjectsPage = () => {
                 )}
             </div>
 
-            {/* Floating Add Button */}
-            <button
-                onClick={() => setIsModalOpen(true)}
-                className="fixed bottom-8 right-8 w-16 h-16 bg-linear-to-br from-blue-600 to-indigo-600 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center group"
-                aria-label="Add new project"
-            >
-                <Plus className="w-8 h-8 group-hover:rotate-90 transition-transform" />
-            </button>
+            {/* Floating Action Buttons */}
+            <div className="fixed bottom-8 right-8 flex items-center gap-4">
+                {/* Join Button */}
+                <button
+                    onClick={() => setIsJoinModalOpen(true)}
+                    className="w-16 h-16 bg-linear-to-br from-green-600 to-emerald-600 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center group"
+                    aria-label="Join a project"
+                >
+                    <UserPlus className="w-8 h-8 group-hover:scale-110 transition-transform" />
+                </button>
+
+                {/* Add Button */}
+                <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="w-16 h-16 bg-linear-to-br from-blue-600 to-indigo-600 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center group"
+                    aria-label="Add new project"
+                >
+                    <Plus className="w-8 h-8 group-hover:rotate-90 transition-transform" />
+                </button>
+            </div>
 
             {/* Modal */}
             {isModalOpen && (
@@ -492,10 +509,10 @@ const ProjectsPage = () => {
                                     />
                                     <button
                                         type="button"
-                                        onClick={() => handleCopyCode(joinCode)}
+                                        onClick={() => handleCopyCode(joinCode, 'modal')}
                                         className="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2 font-medium"
                                     >
-                                        {isCopied ? (
+                                        {copiedCodeId === 'modal' ? (
                                             <>
                                                 <Check className="w-5 h-5" />
                                                 <span>Copied!</span>

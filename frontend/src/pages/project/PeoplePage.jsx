@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { Mail, UserPlus, Crown, Check, X } from 'lucide-react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 
 const PeoplePage = () => {
     const { projectId } = useParams()
+    const navigate = useNavigate()
     const [teamMembers, setTeamMembers] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [pendingRequests, setPendingRequests] = useState([])
@@ -108,6 +109,10 @@ const PeoplePage = () => {
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     }
 
+    const handleUserClick = (userId) => {
+        navigate(`/profile/${userId}`)
+    }
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -144,7 +149,12 @@ const PeoplePage = () => {
 
                                     {/* Info */}
                                     <div className="flex-1 min-w-0">
-                                        <h4 className="text-base font-semibold text-slate-800">{request.name}</h4>
+                                        <h4
+                                            className="text-base font-semibold text-slate-800 hover:text-blue-600 cursor-pointer transition-colors"
+                                            onClick={() => handleUserClick(request.id)}
+                                        >
+                                            {request.name}
+                                        </h4>
                                         <p className="text-sm text-slate-600">{request.designation || 'Team Member'}</p>
                                         <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
                                             <Mail className="w-3 h-3" />
@@ -215,7 +225,10 @@ const PeoplePage = () => {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 mb-1">
-                                            <h3 className="text-lg font-semibold text-slate-800 truncate">
+                                            <h3
+                                                className="text-lg font-semibold text-slate-800 truncate hover:text-blue-600 cursor-pointer transition-colors"
+                                                onClick={() => handleUserClick(member.id)}
+                                            >
                                                 {member.name || 'Unknown User'}
                                             </h3>
                                             {member.isOwner && (

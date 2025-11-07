@@ -155,3 +155,33 @@ module.exports.updateProfile = (req, res) => {
         }
     );
 }
+
+module.exports.getUserById = (req, res) => {
+    const { id } = req.params;
+    console.log(`Fetching user with ID: ${id}`);
+
+    db.get(
+        `SELECT id, name, email, designation, company, location, phone, about, skills, experience, github, linkedin, createdAt FROM Users WHERE id = ?`,
+        [id],
+        (err, row) => {
+            if (err) {
+                console.error("Error fetching user by ID:", err);
+                res.status(500).send({
+                    success: false,
+                    message: 'Error fetching user'
+                });
+            } else {
+                if (!row) {
+                    return res.status(404).send({
+                        success: false,
+                        message: 'User not found'
+                    });
+                }
+                res.status(200).send({
+                    success: true,
+                    user: row
+                });
+            }
+        }
+    );
+}

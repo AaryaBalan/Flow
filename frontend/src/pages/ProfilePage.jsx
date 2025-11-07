@@ -1,23 +1,47 @@
 import React, { useState, useEffect } from 'react'
 import { Mail, Calendar, MapPin, Edit, Phone, Building2, Briefcase, Code, Github, Linkedin, ExternalLink } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import EditProfileModal from '../components/EditProfileModal'
 import toast from 'react-hot-toast'
 import axios from 'axios'
 
 const ProfilePage = () => {
     const navigate = useNavigate()
+    const { userId } = useParams()
     const [user, setUser] = useState(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
+    const [isLoading, setIsLoading] = useState(true)
+    const [currentUser] = useState(() => JSON.parse(localStorage.getItem('user') || '{}'))
+    const isOwnProfile = !userId || parseInt(userId) === currentUser.id
 
     useEffect(() => {
-        // Load user from localStorage (contains all data including profile)
-        const userData = localStorage.getItem('user')
-
-        if (userData) {
-            setUser(JSON.parse(userData))
+        if (userId) {
+            // Fetch user by ID from backend
+            fetchUserById(userId)
+        } else {
+            // Load current user from localStorage
+            const userData = localStorage.getItem('user')
+            if (userData) {
+                setUser(JSON.parse(userData))
+            }
+            setIsLoading(false)
         }
-    }, [])
+    }, [userId])
+
+    const fetchUserById = async (id) => {
+        try {
+            setIsLoading(true)
+            const response = await axios.get(`http://localhost:3000/api/users/${id}`)
+            if (response.data.success) {
+                setUser(response.data.user)
+            }
+        } catch (error) {
+            console.error('Error fetching user:', error)
+            toast.error('Failed to load user profile')
+        } finally {
+            setIsLoading(false)
+        }
+    }
 
     const handleEditProfile = () => {
         setIsModalOpen(true)
@@ -62,7 +86,7 @@ const ProfilePage = () => {
         return 'Recently'
     }
 
-    if (!user) {
+    if (isLoading) {
         return (
             <div className="flex items-center justify-center h-full">
                 <div className="text-center">
@@ -93,13 +117,15 @@ const ProfilePage = () => {
                                 <p className="text-sm sm:text-base text-slate-600">{user?.designation || 'Developer'}</p>
                             </div>
                         </div>
-                        <button
-                            onClick={handleEditProfile}
-                            className="flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors text-sm sm:text-base w-full sm:w-auto justify-center sm:mb-2"
-                        >
-                            <Edit className="w-4 h-4" />
-                            Edit Profile
-                        </button>
+                        {isOwnProfile && (
+                            <button
+                                onClick={handleEditProfile}
+                                className="flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors text-sm sm:text-base w-full sm:w-auto justify-center sm:mb-2"
+                            >
+                                <Edit className="w-4 h-4" />
+                                Edit Profile
+                            </button>
+                        )}
                     </div>
 
                     {/* Contact Info Grid */}
@@ -146,11 +172,11 @@ const ProfilePage = () => {
                                 {user.about}
                             </p>
                         </div>
-                    ) : (
+                    ) : isOwnProfile ? (
                         <div className="mb-4 sm:mb-6 p-4 sm:p-6 bg-slate-50 rounded-lg border-2 border-dashed border-slate-200 text-center">
                             <p className="text-xs sm:text-sm text-slate-500">No bio added yet. Click "Edit Profile" to add information about yourself.</p>
                         </div>
-                    )}
+                    ) : null}
 
                     {/* Skills Section */}
                     {user?.skills ? (
@@ -170,12 +196,12 @@ const ProfilePage = () => {
                                 ))}
                             </div>
                         </div>
-                    ) : (
+                    ) : isOwnProfile ? (
                         <div className="mb-4 sm:mb-6 p-4 sm:p-6 bg-slate-50 rounded-lg border-2 border-dashed border-slate-200 text-center">
                             <Code className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400 mx-auto mb-2" />
                             <p className="text-xs sm:text-sm text-slate-500">No skills listed yet. Add your skills to showcase your expertise.</p>
                         </div>
-                    )}
+                    ) : null}
 
                     {/* Social Links */}
                     {(user?.github || user?.linkedin) ? (
@@ -208,7 +234,7 @@ const ProfilePage = () => {
                                 )}
                             </div>
                         </div>
-                    ) : (
+                    ) : isOwnProfile ? (
                         <div className="p-4 sm:p-6 bg-slate-50 rounded-lg border-2 border-dashed border-slate-200 text-center">
                             <div className="flex items-center justify-center gap-2 mb-2">
                                 <Github className="w-5 h-5 sm:w-6 sm:h-6 text-slate-400" />
@@ -216,7 +242,7 @@ const ProfilePage = () => {
                             </div>
                             <p className="text-xs sm:text-sm text-slate-500">No social links added yet. Connect your GitHub and LinkedIn profiles.</p>
                         </div>
-                    )}
+                    ) : null}
                 </div>
             </div>
 
@@ -242,13 +268,15 @@ const ProfilePage = () => {
                 </div>
             </div>
 
-            {/* Edit Profile Modal */}
-            <EditProfileModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                userData={user}
-                onSave={handleSaveProfile}
-            />
+            {/* Edit Profile Modal - Only show for own profile */}
+            {isOwnProfile && (
+                <EditProfileModal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    userData={user}
+                    onSave={handleSaveProfile}
+                />
+            )}
         </div>
     )
 }

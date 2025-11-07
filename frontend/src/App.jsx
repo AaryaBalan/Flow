@@ -74,6 +74,7 @@ function AppContent() {
         <Route path="projects" element={<ProjectsPage />} />
         <Route path="ai" element={<AIPage />} />
         <Route path="profile" element={<ProfilePage />} />
+        <Route path="profile/:userId" element={<ProfilePage />} />
       </Route>
       <Route path="/project/:projectId" element={<SingleProjectPage />}>
         <Route index element={<Navigate to="task" replace />} />

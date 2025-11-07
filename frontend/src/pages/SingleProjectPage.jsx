@@ -10,14 +10,34 @@ import {
     BarChart3,
     ArrowLeft
 } from 'lucide-react'
+import axios from 'axios'
 
 const SingleProjectPage = () => {
     const { projectId } = useParams()
     const location = useLocation()
     const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(false)
     const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false)
+    const [projectName, setProjectName] = useState('Project')
     const leftSidebarRef = useRef(null)
     const rightSidebarRef = useRef(null)
+
+    // Fetch project details
+    useEffect(() => {
+        const fetchProjectDetails = async () => {
+            try {
+                const response = await axios.get(`http://localhost:3000/api/projects/${projectId}`)
+                if (response.data.success) {
+                    setProjectName(response.data.project.title)
+                }
+            } catch (error) {
+                console.error('Error fetching project details:', error)
+            }
+        }
+
+        if (projectId) {
+            fetchProjectDetails()
+        }
+    }, [projectId])
 
     // Close left sidebar when clicking outside
     useEffect(() => {
@@ -98,10 +118,10 @@ const SingleProjectPage = () => {
 
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-lg bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center">
-                                <span className="text-lg font-bold text-white">P</span>
+                                <span className="text-lg font-bold text-white">{projectName.charAt(0).toUpperCase()}</span>
                             </div>
                             <div className="hidden sm:block">
-                                <h1 className="text-lg font-bold text-slate-800">Project #{projectId}</h1>
+                                <h1 className="text-lg font-bold text-slate-800">{projectName}</h1>
                                 <p className="text-xs text-slate-500">Manage your project</p>
                             </div>
                         </div>
