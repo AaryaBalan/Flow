@@ -1,19 +1,29 @@
 import { useState, useRef, useEffect } from 'react'
-import { UserButton } from '@clerk/clerk-react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
     Home as HomeIcon,
     FolderKanban,
     Sparkles,
     User,
     Menu,
-    X
+    X,
+    LogOut
 } from 'lucide-react'
+import toast, { Toaster } from 'react-hot-toast';
 
 const Navbar = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
     const sidebarRef = useRef(null)
     const location = useLocation()
+    const navigate = useNavigate()
+
+    const handleLogout = () => {
+        localStorage.removeItem('user')
+        toast.success('Logged out successfully!')
+        setTimeout(() => {
+            window.location.href = '/auth'
+        }, 1500);
+    }
 
     // Close sidebar when clicking outside
     useEffect(() => {
@@ -49,7 +59,7 @@ const Navbar = () => {
                         <div className="flex items-center gap-4">
                             <button
                                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                                className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+                                className="p-2 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"
                                 aria-label="Toggle menu"
                             >
                                 <Menu className="w-6 h-6 text-slate-700" />
@@ -67,13 +77,14 @@ const Navbar = () => {
 
                         {/* Right: User Button */}
                         <div className="flex items-center gap-4">
-                            <UserButton
-                                appearance={{
-                                    elements: {
-                                        avatarBox: 'w-10 h-10'
-                                    }
-                                }}
-                            />
+                            <button
+                                onClick={handleLogout}
+                                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-all hover:scale-110 cursor-pointer border border-red-200"
+                                aria-label="Logout"
+                            >
+                                <LogOut className="w-4 h-4" />
+                                <span className="hidden sm:inline">Logout</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -123,8 +134,8 @@ const Navbar = () => {
                                             to={item.path}
                                             onClick={() => setIsSidebarOpen(false)}
                                             className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors group ${isActive
-                                                    ? 'bg-blue-50 text-blue-600'
-                                                    : 'text-slate-700 hover:bg-blue-50 hover:text-blue-600'
+                                                ? 'bg-blue-50 text-blue-600'
+                                                : 'text-slate-700 hover:bg-blue-50 hover:text-blue-600'
                                                 }`}
                                         >
                                             <Icon className="w-5 h-5 group-hover:scale-110 transition-transform" />
@@ -147,6 +158,7 @@ const Navbar = () => {
                     </div>
                 </div>
             </aside>
+            <Toaster position="bottom-right" />
         </>
     )
 }

@@ -101,7 +101,7 @@ const ProjectsPage = () => {
                 text: 'On break',
                 color: 'bg-green-100 text-green-700 border-green-200',
                 icon: Coffee,
-                message: 'Enjoy your break! 😊'
+                message: 'Enjoy your break!'
             }
         }
         if (workedMinutes >= 240) { // 4+ hours
@@ -109,14 +109,14 @@ const ProjectsPage = () => {
                 text: 'Take a break!',
                 color: 'bg-red-100 text-red-700 border-red-200',
                 icon: Coffee,
-                message: 'You\'ve been working for a while. Time for a break! 🌟'
+                message: 'You\'ve been working for a while. Time for a break!'
             }
         } else if (workedMinutes >= 180) { // 3+ hours
             return {
                 text: 'Break soon',
                 color: 'bg-orange-100 text-orange-700 border-orange-200',
                 icon: Coffee,
-                message: 'Consider taking a break in the next 15-30 minutes 💪'
+                message: 'Consider taking a break in the next 15-30 minutes'
             }
         } else if (workedMinutes >= 120) { // 2+ hours
             return {
@@ -130,7 +130,7 @@ const ProjectsPage = () => {
                 text: 'Focus time',
                 color: 'bg-green-100 text-green-700 border-green-200',
                 icon: Target,
-                message: 'Fresh start! Perfect time to tackle important tasks ✨'
+                message: 'Fresh start! Perfect time to tackle important tasks'
             }
         }
     }
