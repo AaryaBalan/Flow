@@ -1,14 +1,44 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, X, Users, Calendar, Clock, Coffee, Target, TrendingUp } from 'lucide-react'
+import { Plus, X, Users, Calendar, Clock, Coffee, Target, TrendingUp, Copy, Check, UserPlus } from 'lucide-react'
+import toast from 'react-hot-toast'
+import axios from 'axios'
 
 const ProjectsPage = () => {
     const [isModalOpen, setIsModalOpen] = useState(false)
+    const [isJoinModalOpen, setIsJoinModalOpen] = useState(false)
+    const [joinCode, setJoinCode] = useState('')
+    const [joinCodeInput, setJoinCodeInput] = useState('')
+    const [isCopied, setIsCopied] = useState(false)
+    const [isLoading, setIsLoading] = useState(true)
+    const [currentUser, setCurrentUser] = useState(null)
     const [formData, setFormData] = useState({
         title: '',
         description: '',
         author: ''
     })
+
+    // Load current user
+    useEffect(() => {
+        const userStr = localStorage.getItem('user')
+        if (userStr) {
+            try {
+                const userData = JSON.parse(userStr)
+                setCurrentUser(userData)
+            } catch (error) {
+                console.error('Error parsing user data:', error)
+            }
+        }
+    }, [])
+
+    // Generate join code when modal opens
+    useEffect(() => {
+        if (isModalOpen) {
+            const code = Math.floor(100000 + Math.random() * 900000).toString()
+            setJoinCode(code)
+            setIsCopied(false)
+        }
+    }, [isModalOpen])
 
     // Personal work stats
     const [workStats] = useState({
@@ -19,65 +49,106 @@ const ProjectsPage = () => {
         projectsActive: 2
     })
 
-    const [projects, setProjects] = useState([
-        {
-            id: 1,
-            title: 'E-commerce Platform',
-            description: 'Building a modern e-commerce platform with React and Node.js',
-            author: 'John Doe',
-            peopleJoined: 5,
-            createdAt: '2025-10-15',
-            status: 'Active',
-            progress: 75
-        },
-        {
-            id: 2,
-            title: 'Mobile App',
-            description: 'Cross-platform mobile application for task management',
-            author: 'Jane Smith',
-            peopleJoined: 3,
-            createdAt: '2025-10-20',
-            status: 'Active',
-            progress: 45
-        },
-        {
-            id: 3,
-            title: 'Dashboard UI',
-            description: 'Admin dashboard with analytics and reporting features',
-            author: 'Mike Johnson',
-            peopleJoined: 8,
-            createdAt: '2025-09-10',
-            status: 'Completed',
-            progress: 100
-        },
-    ])
+    const [projects, setProjects] = useState([])
+
+    // Fetch projects when component mounts or user changes
+    useEffect(() => {
+        if (currentUser?.id) {
+            fetchUserProjects()
+        }
+    }, [currentUser])
+
+    const fetchUserProjects = async () => {
+        if (!currentUser?.id) return
+
+        try {
+            setIsLoading(true)
+            const response = await axios.get(`http://localhost:3000/api/projects/user/${currentUser.id}`)
+
+            if (response.data.success) {
+                setProjects(response.data.projects)
+            }
+        } catch (error) {
+            console.error('Error fetching projects:', error)
+            toast.error('Failed to load projects')
+        } finally {
+            setIsLoading(false)
+        }
+    }
 
     const handleInputChange = (e) => {
         const { name, value } = e.target
         setFormData(prev => ({ ...prev, [name]: value }))
     }
 
-    const handleSubmit = (e) => {
+    const handleCopyCode = async (code) => {
+        try {
+            await navigator.clipboard.writeText(code)
+            setIsCopied(true)
+            toast.success('Join code copied to clipboard!')
+            setTimeout(() => setIsCopied(false), 2000)
+        } catch (error) {
+            toast.error('Failed to copy join code')
+        }
+    }
+
+    const handleSubmit = async (e) => {
         e.preventDefault()
 
-        // Create new project object
-        const newProject = {
-            id: projects.length + 1,
-            title: formData.title,
-            description: formData.description,
-            author: formData.author,
-            peopleJoined: 1,
-            createdAt: new Date().toISOString().split('T')[0],
-            status: 'Active',
-            progress: 0
+        if (!currentUser?.id) {
+            toast.error('Please log in to create a project')
+            return
         }
 
-        // Add new project to the beginning of the list
-        setProjects(prev => [newProject, ...prev])
+        try {
+            const response = await axios.post('http://localhost:3000/api/projects/create', {
+                title: formData.title,
+                description: formData.description,
+                authorId: currentUser.id,
+                authorName: formData.author || currentUser.fullName
+            })
 
-        // Close modal and reset form
-        setIsModalOpen(false)
-        setFormData({ title: '', description: '', author: '' })
+            if (response.data.success) {
+                toast.success('Project created successfully!')
+                await fetchUserProjects() // Refresh projects list
+                setIsModalOpen(false)
+                setFormData({ title: '', description: '', author: '' })
+            }
+        } catch (error) {
+            console.error('Error creating project:', error)
+            toast.error(error.response?.data?.message || 'Failed to create project')
+        }
+    }
+
+    const handleJoinProject = async (e) => {
+        e.preventDefault()
+
+        if (!joinCodeInput.trim()) {
+            toast.error('Please enter a join code')
+            return
+        }
+
+        if (!currentUser?.id) {
+            toast.error('Please log in to join a project')
+            return
+        }
+
+        try {
+            const response = await axios.post('http://localhost:3000/api/projects/join', {
+                joinCode: joinCodeInput,
+                userId: currentUser.id
+            })
+
+            if (response.data.success) {
+                toast.success(response.data.message)
+                await fetchUserProjects() // Refresh projects list
+                setIsJoinModalOpen(false)
+                setJoinCodeInput('')
+            }
+        } catch (error) {
+            console.error('Error joining project:', error)
+            toast.error(error.response?.data?.message || 'Failed to join project')
+        }
     }
 
     const getInitials = (title) => {
@@ -142,6 +213,13 @@ const ProjectsPage = () => {
                     <h1 className="text-3xl font-bold text-slate-800 mb-2">Projects</h1>
                     <p className="text-slate-600">Manage and track all your projects</p>
                 </div>
+                <button
+                    onClick={() => setIsJoinModalOpen(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all shadow-sm hover:shadow-md"
+                >
+                    <UserPlus className="w-5 h-5" />
+                    <span className="hidden sm:inline">Join Project</span>
+                </button>
             </div>
 
             {/* Overall Work Stats Section */}
@@ -221,71 +299,129 @@ const ProjectsPage = () => {
 
             {/* Projects Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {projects.map(project => (
-                    <Link
-                        key={project.id}
-                        to={`/project/${project.id}`}
-                        className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-slate-100 overflow-hidden block"
-                    >
-                        {/* Project Header */}
-                        <div className="p-6 pb-4">
-                            <div className="flex items-start gap-4 mb-4">
-                                {/* Profile Image with First Letter */}
-                                <div className="w-14 h-14 rounded-xl bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center shrink-0 shadow-md">
-                                    <span className="text-2xl font-bold text-white">{getInitials(project.title)}</span>
+                {isLoading ? (
+                    <div className="col-span-full text-center py-12">
+                        <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                        <p className="text-slate-600">Loading projects...</p>
+                    </div>
+                ) : projects.length === 0 ? (
+                    <div className="col-span-full text-center py-12">
+                        <Users className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                        <h3 className="text-xl font-semibold text-slate-800 mb-2">No Projects Yet</h3>
+                        <p className="text-slate-600 mb-4">Create your first project or join an existing one</p>
+                        <div className="flex items-center justify-center gap-3">
+                            <button
+                                onClick={() => setIsModalOpen(true)}
+                                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all"
+                            >
+                                Create Project
+                            </button>
+                            <button
+                                onClick={() => setIsJoinModalOpen(true)}
+                                className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all"
+                            >
+                                Join Project
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    projects.map(project => (
+                        <Link
+                            key={project.id}
+                            to={`/project/${project.id}`}
+                            className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-slate-100 overflow-hidden block"
+                        >
+                            {/* Project Header */}
+                            <div className="p-6 pb-4">
+                                <div className="flex items-start gap-4 mb-4">
+                                    {/* Profile Image with First Letter */}
+                                    <div className="w-14 h-14 rounded-xl bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center shrink-0 shadow-md">
+                                        <span className="text-2xl font-bold text-white">{getInitials(project.title)}</span>
+                                    </div>
+
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-start justify-between gap-2 mb-2">
+                                            <h3 className="text-lg font-semibold text-slate-800 truncate">{project.title}</h3>
+                                            <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${project.status === 'Active'
+                                                ? 'bg-green-100 text-green-700'
+                                                : 'bg-blue-100 text-blue-700'
+                                                }`}>
+                                                {project.status}
+                                            </span>
+                                        </div>
+                                        <p className="text-sm text-slate-600 line-clamp-2 mb-3">
+                                            {project.description}
+                                        </p>
+                                    </div>
                                 </div>
 
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-start justify-between gap-2 mb-2">
-                                        <h3 className="text-lg font-semibold text-slate-800 truncate">{project.title}</h3>
-                                        <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${project.status === 'Active'
-                                            ? 'bg-green-100 text-green-700'
-                                            : 'bg-blue-100 text-blue-700'
-                                            }`}>
-                                            {project.status}
-                                        </span>
-                                    </div>
-                                    <p className="text-sm text-slate-600 line-clamp-2 mb-3">
-                                        {project.description}
+                                {/* Author */}
+                                <div className="mb-3">
+                                    <p className="text-sm text-slate-500">
+                                        <span className="font-medium text-slate-700">Author:</span> {project.authorName}
                                     </p>
                                 </div>
-                            </div>
 
-                            {/* Author */}
-                            <div className="mb-3">
-                                <p className="text-sm text-slate-500">
-                                    <span className="font-medium text-slate-700">Author:</span> {project.author}
-                                </p>
-                            </div>
+                                {/* Join Code - Only show for project owner */}
+                                {project.authorId == currentUser?.id && (
+                                    <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <div className="flex-1">
+                                                <p className="text-xs text-slate-600 mb-1 font-medium">Join Code</p>
+                                                <p className="text-lg font-bold text-blue-600 font-mono">{project.joinCode}</p>
+                                            </div>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.preventDefault()
+                                                    handleCopyCode(project.joinCode)
+                                                }}
+                                                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-1 text-sm font-medium shrink-0"
+                                            >
+                                                {isCopied ? (
+                                                    <>
+                                                        <Check className="w-4 h-4" />
+                                                        <span className="hidden sm:inline">Copied</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Copy className="w-4 h-4" />
+                                                        <span className="hidden sm:inline">Copy</span>
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
 
-                            {/* Meta Info */}
-                            <div className="flex items-center gap-4 mb-4 text-sm text-slate-600">
-                                <div className="flex items-center gap-1.5">
-                                    <Users className="w-4 h-4" />
-                                    <span>{project.peopleJoined} joined</span>
+                                {/* Meta Info */}
+                                <div className="flex items-center gap-4 mb-4 text-sm text-slate-600">
+                                    <div className="flex items-center gap-1.5">
+                                        <Users className="w-4 h-4" />
+                                        <span>{project.peopleJoined} joined</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <Calendar className="w-4 h-4" />
+                                        <span>{formatDate(project.createdAt)}</span>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-1.5">
-                                    <Calendar className="w-4 h-4" />
-                                    <span>{formatDate(project.createdAt)}</span>
-                                </div>
-                            </div>
 
-                            {/* Progress */}
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between text-sm">
-                                    <span className="text-slate-600 font-medium">Progress</span>
-                                    <span className="font-semibold text-slate-800">{project.progress}%</span>
-                                </div>
-                                <div className="w-full bg-slate-200 rounded-full h-2">
-                                    <div
-                                        className="bg-linear-to-r from-blue-600 to-indigo-600 h-2 rounded-full transition-all"
-                                        style={{ width: `${project.progress}%` }}
-                                    />
+                                {/* Progress */}
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-slate-600 font-medium">Progress</span>
+                                        <span className="font-semibold text-slate-800">{project.progress}%</span>
+                                    </div>
+                                    <div className="w-full bg-slate-200 rounded-full h-2">
+                                        <div
+                                            className="bg-linear-to-r from-blue-600 to-indigo-600 h-2 rounded-full transition-all"
+                                            style={{ width: `${project.progress}%` }}
+                                        />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </Link>
-                ))}
+                        </Link>
+                    ))
+                )}
             </div>
 
             {/* Floating Add Button */}
@@ -318,6 +454,40 @@ const ProjectsPage = () => {
 
                         {/* Modal Body */}
                         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                            {/* Join Code Field (Read-only) */}
+                            <div>
+                                <label htmlFor="joinCode" className="block text-sm font-semibold text-slate-700 mb-2">
+                                    Join Code
+                                </label>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        id="joinCode"
+                                        value={joinCode}
+                                        readOnly
+                                        className="flex-1 px-4 py-3 border border-slate-300 rounded-lg bg-slate-50 text-slate-700 font-mono text-lg font-semibold cursor-not-allowed"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => handleCopyCode(joinCode)}
+                                        className="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2 font-medium"
+                                    >
+                                        {isCopied ? (
+                                            <>
+                                                <Check className="w-5 h-5" />
+                                                <span>Copied!</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Copy className="w-5 h-5" />
+                                                <span>Copy</span>
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                                <p className="text-xs text-slate-500 mt-2">Share this code with others to let them join your project</p>
+                            </div>
+
                             {/* Title Field */}
                             <div>
                                 <label htmlFor="title" className="block text-sm font-semibold text-slate-700 mb-2">
@@ -361,7 +531,7 @@ const ProjectsPage = () => {
                                     type="text"
                                     id="author"
                                     name="author"
-                                    value={formData.author}
+                                    value={formData.author || currentUser?.fullName || ''}
                                     onChange={handleInputChange}
                                     required
                                     placeholder="Enter your name"
@@ -380,6 +550,71 @@ const ProjectsPage = () => {
                                 <button
                                     type="button"
                                     onClick={() => setIsModalOpen(false)}
+                                    className="px-6 py-3 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Join Project Modal */}
+            {isJoinModalOpen && (
+                <div className="fixed inset-0 backdrop-blur-sm bg-white/30 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between p-6 border-b border-slate-200">
+                            <div>
+                                <h2 className="text-2xl font-bold text-slate-800">Join a Project</h2>
+                                <p className="text-sm text-slate-600 mt-1">Enter the project join code</p>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    setIsJoinModalOpen(false)
+                                    setJoinCodeInput('')
+                                }}
+                                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                                aria-label="Close modal"
+                            >
+                                <X className="w-6 h-6 text-slate-600" />
+                            </button>
+                        </div>
+
+                        {/* Modal Body */}
+                        <form onSubmit={handleJoinProject} className="p-6 space-y-6">
+                            {/* Join Code Input */}
+                            <div>
+                                <label htmlFor="joinCodeInput" className="block text-sm font-semibold text-slate-700 mb-2">
+                                    Enter Join Code *
+                                </label>
+                                <input
+                                    type="text"
+                                    id="joinCodeInput"
+                                    value={joinCodeInput}
+                                    onChange={(e) => setJoinCodeInput(e.target.value)}
+                                    placeholder="Enter 6-digit code"
+                                    maxLength={6}
+                                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all font-mono text-lg text-center tracking-wider"
+                                />
+                                <p className="text-xs text-slate-500 mt-2">Ask the project owner for the join code</p>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex items-center gap-3">
+                                <button
+                                    type="submit"
+                                    className="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all shadow-sm hover:shadow-md"
+                                >
+                                    Join Project
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setIsJoinModalOpen(false)
+                                        setJoinCodeInput('')
+                                    }}
                                     className="px-6 py-3 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors"
                                 >
                                     Cancel
