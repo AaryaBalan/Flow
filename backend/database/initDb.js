@@ -108,6 +108,58 @@ function initializeTables() {
         db.run(`CREATE INDEX IF NOT EXISTS idx_projectMembers_status ON ProjectMembers(invitationStatus)`, (err) => {
             if (err) console.error('Error creating invitationStatus index:', err.message);
         });
+
+        // Create Tasks table
+        db.run(`
+            CREATE TABLE IF NOT EXISTS Tasks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                projectId INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                description TEXT,
+                taskAuthor TEXT NOT NULL,
+                taskAuthorId INTEGER NOT NULL,
+                createdBy TEXT NOT NULL,
+                createdById INTEGER NOT NULL,
+                completed INTEGER DEFAULT 0,
+                completedBy TEXT,
+                completedById INTEGER,
+                completionDate DATETIME,
+                onlyAuthorCanComplete INTEGER DEFAULT 0,
+                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (projectId) REFERENCES Projects(id) ON DELETE CASCADE,
+                FOREIGN KEY (taskAuthorId) REFERENCES Users(id) ON DELETE CASCADE,
+                FOREIGN KEY (createdById) REFERENCES Users(id) ON DELETE CASCADE,
+                FOREIGN KEY (completedById) REFERENCES Users(id) ON DELETE SET NULL
+            )
+        `, (err) => {
+            if (err) {
+                console.error('Error creating Tasks table:', err.message);
+            } else {
+                console.log('Tasks table ready');
+
+                // Add description column to existing table if it doesn't exist
+                db.run(`
+                    ALTER TABLE Tasks ADD COLUMN description TEXT
+                `, (alterErr) => {
+                    if (alterErr && !alterErr.message.includes('duplicate column')) {
+                        console.error('Error adding description column:', alterErr.message);
+                    }
+                });
+            }
+        });
+
+        // Create indexes for Tasks table
+        db.run(`CREATE INDEX IF NOT EXISTS idx_tasks_projectId ON Tasks(projectId)`, (err) => {
+            if (err) console.error('Error creating tasks projectId index:', err.message);
+        });
+
+        db.run(`CREATE INDEX IF NOT EXISTS idx_tasks_authorId ON Tasks(taskAuthorId)`, (err) => {
+            if (err) console.error('Error creating tasks authorId index:', err.message);
+        });
+
+        db.run(`CREATE INDEX IF NOT EXISTS idx_tasks_completed ON Tasks(completed)`, (err) => {
+            if (err) console.error('Error creating tasks completed index:', err.message);
+        });
     });
 }
 
