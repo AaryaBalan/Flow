@@ -146,7 +146,7 @@ exports.toggleTaskCompletion = (req, res) => {
                 SET completed = 1, 
                     completedBy = ?, 
                     completedById = ?,
-                    completionDate = CURRENT_TIMESTAMP
+                    completionDate = datetime('now')
                 WHERE id = ?
             `;
 
