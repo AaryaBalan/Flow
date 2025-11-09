@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Plus, X, Users, Calendar, Clock, Coffee, Target, TrendingUp, Copy, Check, UserPlus } from 'lucide-react'
 import toast from 'react-hot-toast'
 import axios from 'axios'
+import { v4 as uuidv4 } from 'uuid'
 
 const ProjectsPage = () => {
     const [isModalOpen, setIsModalOpen] = useState(false)
@@ -35,7 +36,9 @@ const ProjectsPage = () => {
     // Generate join code when modal opens
     useEffect(() => {
         if (isModalOpen) {
-            const code = Math.floor(100000 + Math.random() * 900000).toString()
+            // Generate a 6-character code from UUID (more secure than Math.random)
+            const uuid = uuidv4().replace(/-/g, '')
+            const code = uuid.substring(0, 6).toUpperCase()
             setJoinCode(code)
             setCopiedCodeId(null) // Reset copied state when modal opens
         }
@@ -124,7 +127,8 @@ const ProjectsPage = () => {
                 title: formData.title,
                 description: formData.description,
                 authorId: currentUser.id,
-                authorName: authorName
+                authorName: authorName,
+                joinCode: joinCode // Send the UUID-generated code to backend
             })
 
             if (response.data.success) {
@@ -337,8 +341,8 @@ const ProjectsPage = () => {
                             <button
                                 onClick={handleToggleBreak}
                                 className={`px-4 py-2 rounded-lg font-semibold text-sm hover:shadow-md transition-all ${userActivity?.currentStatus === 'active'
-                                        ? 'bg-white hover:bg-red-50 text-red-700 border border-red-200'
-                                        : 'bg-white hover:bg-green-50 text-green-700 border border-green-200'
+                                    ? 'bg-white hover:bg-red-50 text-red-700 border border-red-200'
+                                    : 'bg-white hover:bg-green-50 text-green-700 border border-green-200'
                                     }`}
                             >
                                 {userActivity?.currentStatus === 'active' ? 'Take a Break' : 'Resume Work'}

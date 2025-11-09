@@ -7,7 +7,7 @@ function generateJoinCode() {
 
 // Create a new project
 exports.createProject = (req, res) => {
-    const { title, description, authorId, authorName } = req.body;
+    const { title, description, authorId, authorName, joinCode } = req.body;
 
     if (!title || !description || !authorId || !authorName) {
         return res.status(400).json({
@@ -16,15 +16,15 @@ exports.createProject = (req, res) => {
         });
     }
 
-    // Generate unique join code
-    const joinCode = generateJoinCode();
+    // Use provided join code or generate one if not provided (fallback)
+    const finalJoinCode = joinCode || generateJoinCode();
 
     const query = `
         INSERT INTO Projects (title, description, authorId, authorName, joinCode, status, progress)
         VALUES (?, ?, ?, ?, ?, 'Active', 0)
     `;
 
-    db.run(query, [title, description, authorId, authorName, joinCode], function (err) {
+    db.run(query, [title, description, authorId, authorName, finalJoinCode], function (err) {
         if (err) {
             console.error('Error creating project:', err.message);
             return res.status(500).json({
