@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Mail, Calendar, MapPin, Edit, Phone, Building2, Briefcase, Code, Github, Linkedin, ExternalLink } from 'lucide-react'
+import { Mail, Calendar, MapPin, Edit, Phone, Building2, Briefcase, Code, Github, Linkedin, ExternalLink, Clock, Target, Users as UsersIcon, Coffee } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import EditProfileModal from '../components/EditProfileModal'
 import toast from 'react-hot-toast'
@@ -9,6 +9,7 @@ const ProfilePage = () => {
     const navigate = useNavigate()
     const { userId } = useParams()
     const [user, setUser] = useState(null)
+    const [activity, setActivity] = useState(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
     const [currentUser] = useState(() => JSON.parse(localStorage.getItem('user') || '{}'))
@@ -18,14 +19,29 @@ const ProfilePage = () => {
         if (userId) {
             // Fetch user by ID from backend
             fetchUserById(userId)
+            fetchUserActivity(userId)
         } else {
             // Load current user from localStorage
             const userData = localStorage.getItem('user')
             if (userData) {
-                setUser(JSON.parse(userData))
+                const parsedUser = JSON.parse(userData)
+                setUser(parsedUser)
+                if (parsedUser.id) {
+                    fetchUserActivity(parsedUser.id)
+                }
             }
             setIsLoading(false)
         }
+
+        // Set up polling for activity updates (every 30 seconds)
+        const activityInterval = setInterval(() => {
+            const targetUserId = userId || currentUser.id
+            if (targetUserId) {
+                fetchUserActivity(targetUserId)
+            }
+        }, 30000)
+
+        return () => clearInterval(activityInterval)
     }, [userId])
 
     const fetchUserById = async (id) => {
@@ -41,6 +57,35 @@ const ProfilePage = () => {
         } finally {
             setIsLoading(false)
         }
+    }
+
+    const fetchUserActivity = async (id) => {
+        try {
+            const response = await axios.get(`http://localhost:3000/api/users/${id}/activity`)
+            if (response.data.success) {
+                setActivity(response.data.activity)
+            }
+        } catch (error) {
+            console.error('Error fetching activity:', error)
+        }
+    }
+
+    const formatWorkTime = (minutes) => {
+        if (!minutes) return '0h 0m'
+        const hours = Math.floor(minutes / 60)
+        const mins = minutes % 60
+        return `${hours}h ${mins}m`
+    }
+
+    const formatLastBreak = (timestamp) => {
+        if (!timestamp) return 'No breaks yet'
+        const breakTime = new Date(timestamp)
+        const now = new Date()
+        const diff = Math.floor((now - breakTime) / 60000) // minutes
+
+        if (diff < 60) return `${diff} minutes ago`
+        if (diff < 1440) return `${Math.floor(diff / 60)} hours ago`
+        return breakTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     }
 
     const handleEditProfile = () => {
@@ -111,10 +156,22 @@ const ProfilePage = () => {
                                 {getInitials()}
                             </div>
                             <div className="mb-0 sm:mb-2">
-                                <h1 className="text-xl sm:text-2xl font-bold text-slate-800">
-                                    {user?.name || user?.email?.split('@')[0] || 'User'}
-                                </h1>
-                                <p className="text-sm sm:text-base text-slate-600">{user?.designation || 'Developer'}</p>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <h1 className="text-xl sm:text-2xl font-bold text-slate-800">
+                                        {user?.name || user?.email?.split('@')[0] || 'User'}
+                                    </h1>
+                                    {activity && (
+                                        <div className={`w-3 h-3 rounded-full ${activity.currentStatus === 'active' ? 'bg-green-500' : 'bg-red-500'} animate-pulse`} />
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <p className="text-sm sm:text-base text-slate-600">{user?.designation || 'Developer'}</p>
+                                    {activity && (
+                                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${activity.currentStatus === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                            {activity.currentStatus === 'active' ? 'Active' : 'On Break'}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         </div>
                         {isOwnProfile && (
@@ -163,6 +220,53 @@ const ProfilePage = () => {
                             <span>Joined {getJoinDate()}</span>
                         </div>
                     </div>
+
+                    {/* Today's Activity Section */}
+                    {activity && (
+                        <div className="mb-4 sm:mb-6 bg-linear-to-br from-blue-50 to-indigo-50 rounded-xl p-4 sm:p-6 border border-blue-200">
+                            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-3 sm:mb-4 flex items-center gap-2">
+                                <Target className="w-5 h-5 text-blue-600" />
+                                Today's Activity
+                            </h2>
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                                {/* Work Time */}
+                                <div className="bg-white rounded-lg p-3 sm:p-4 border border-blue-100">
+                                    <div className="flex items-center gap-2 text-slate-600 mb-2">
+                                        <Clock className="w-4 h-4" />
+                                        <span className="text-xs sm:text-sm font-medium">Work Time</span>
+                                    </div>
+                                    <p className="text-xl sm:text-2xl font-bold text-slate-800">{formatWorkTime(activity.workTimeToday)}</p>
+                                </div>
+
+                                {/* Last Break */}
+                                <div className="bg-white rounded-lg p-3 sm:p-4 border border-blue-100">
+                                    <div className="flex items-center gap-2 text-slate-600 mb-2">
+                                        <Coffee className="w-4 h-4" />
+                                        <span className="text-xs sm:text-sm font-medium">Last Break</span>
+                                    </div>
+                                    <p className="text-sm sm:text-base font-semibold text-slate-800">{formatLastBreak(activity.lastBreakTime)}</p>
+                                </div>
+
+                                {/* Tasks Done */}
+                                <div className="bg-white rounded-lg p-3 sm:p-4 border border-blue-100">
+                                    <div className="flex items-center gap-2 text-slate-600 mb-2">
+                                        <Target className="w-4 h-4" />
+                                        <span className="text-xs sm:text-sm font-medium">Tasks Done</span>
+                                    </div>
+                                    <p className="text-xl sm:text-2xl font-bold text-slate-800">{activity.tasksCompletedToday}</p>
+                                </div>
+
+                                {/* Active Projects */}
+                                <div className="bg-white rounded-lg p-3 sm:p-4 border border-blue-100">
+                                    <div className="flex items-center gap-2 text-slate-600 mb-2">
+                                        <UsersIcon className="w-4 h-4" />
+                                        <span className="text-xs sm:text-sm font-medium">Active Projects</span>
+                                    </div>
+                                    <p className="text-xl sm:text-2xl font-bold text-slate-800">{activity.activeProjects}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* About Section */}
                     {user?.about ? (

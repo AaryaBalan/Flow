@@ -12,6 +12,7 @@ const ProjectsPage = () => {
     const [copiedCodeId, setCopiedCodeId] = useState(null) // Track which code was copied
     const [isLoading, setIsLoading] = useState(true)
     const [currentUser, setCurrentUser] = useState(null)
+    const [userActivity, setUserActivity] = useState(null)
     const [formData, setFormData] = useState({
         title: '',
         description: '',
@@ -40,23 +41,39 @@ const ProjectsPage = () => {
         }
     }, [isModalOpen])
 
-    // Personal work stats
-    const [workStats] = useState({
-        workedMinutes: 195, // 3h 15m
-        isWorking: true,
-        lastBreak: '1.5 hours ago',
-        tasksCompleted: 8,
-        projectsActive: 2
-    })
-
     const [projects, setProjects] = useState([])
 
     // Fetch projects when component mounts or user changes
     useEffect(() => {
         if (currentUser?.id) {
             fetchUserProjects()
+            fetchUserActivity()
         }
     }, [currentUser])
+
+    // Poll for activity updates every 30 seconds
+    useEffect(() => {
+        if (!currentUser?.id) return
+
+        const activityInterval = setInterval(() => {
+            fetchUserActivity()
+        }, 30000)
+
+        return () => clearInterval(activityInterval)
+    }, [currentUser])
+
+    const fetchUserActivity = async () => {
+        if (!currentUser?.id) return
+
+        try {
+            const response = await axios.get(`http://localhost:3000/api/users/${currentUser.id}/activity`)
+            if (response.data.success) {
+                setUserActivity(response.data.activity)
+            }
+        } catch (error) {
+            console.error('Error fetching user activity:', error)
+        }
+    }
 
     const fetchUserProjects = async () => {
         if (!currentUser?.id) return
@@ -153,6 +170,47 @@ const ProjectsPage = () => {
         }
     }
 
+    const handleToggleBreak = async () => {
+        if (!currentUser?.id) {
+            toast.error('Please log in to manage your status')
+            return
+        }
+
+        const newStatus = userActivity?.currentStatus === 'active' ? 'break' : 'active'
+
+        try {
+            const response = await axios.post(`http://localhost:3000/api/users/${currentUser.id}/status`, {
+                status: newStatus
+            })
+
+            if (response.data.success) {
+                toast.success(response.data.message)
+                await fetchUserActivity() // Refresh activity data
+            }
+        } catch (error) {
+            console.error('Error toggling break status:', error)
+            toast.error(error.response?.data?.message || 'Failed to update status')
+        }
+    }
+
+    const formatWorkTime = (minutes) => {
+        if (!minutes) return '0h 0m'
+        const hours = Math.floor(minutes / 60)
+        const mins = minutes % 60
+        return `${hours}h ${mins}m`
+    }
+
+    const formatLastBreak = (timestamp) => {
+        if (!timestamp) return 'No breaks today'
+        const breakTime = new Date(timestamp)
+        const hours = breakTime.getHours()
+        const minutes = breakTime.getMinutes()
+        const ampm = hours >= 12 ? 'PM' : 'AM'
+        const displayHours = hours % 12 || 12
+        const displayMinutes = minutes.toString().padStart(2, '0')
+        return `${displayHours}:${displayMinutes} ${ampm}`
+    }
+
     const getInitials = (title) => {
         return title.charAt(0).toUpperCase()
     }
@@ -160,12 +218,6 @@ const ProjectsPage = () => {
     const formatDate = (dateString) => {
         const date = new Date(dateString)
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-    }
-
-    const formatWorkTime = (minutes) => {
-        const hours = Math.floor(minutes / 60)
-        const mins = minutes % 60
-        return `${hours}h ${mins}m`
     }
 
     const getSuggestion = (workedMinutes, isWorking) => {
@@ -224,8 +276,8 @@ const ProjectsPage = () => {
                         <TrendingUp className="w-6 h-6 text-blue-600" />
                         <h2 className="text-xl font-bold text-slate-800">Today's Activity</h2>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${workStats.isWorking ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
-                        {workStats.isWorking ? '🟢 Working' : '⚪ On Break'}
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${userActivity?.currentStatus === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                        {userActivity?.currentStatus === 'active' ? '🟢 Working' : '🔴 On Break'}
                     </span>
                 </div>
 
@@ -236,7 +288,7 @@ const ProjectsPage = () => {
                             <Clock className="w-4 h-4" />
                             <span className="text-sm font-medium">Work Time</span>
                         </div>
-                        <p className="text-2xl font-bold text-slate-800">{formatWorkTime(workStats.workedMinutes)}</p>
+                        <p className="text-2xl font-bold text-slate-800">{formatWorkTime(userActivity?.workTimeToday || 0)}</p>
                     </div>
 
                     {/* Last Break */}
@@ -245,7 +297,7 @@ const ProjectsPage = () => {
                             <Coffee className="w-4 h-4" />
                             <span className="text-sm font-medium">Last Break</span>
                         </div>
-                        <p className="text-lg font-semibold text-slate-800">{workStats.lastBreak}</p>
+                        <p className="text-lg font-semibold text-slate-800">{formatLastBreak(userActivity?.lastBreakTime)}</p>
                     </div>
 
                     {/* Tasks Completed */}
@@ -254,7 +306,7 @@ const ProjectsPage = () => {
                             <Target className="w-4 h-4" />
                             <span className="text-sm font-medium">Tasks Done</span>
                         </div>
-                        <p className="text-2xl font-bold text-slate-800">{workStats.tasksCompleted}</p>
+                        <p className="text-2xl font-bold text-slate-800">{userActivity?.tasksCompletedToday || 0}</p>
                     </div>
 
                     {/* Active Projects */}
@@ -263,13 +315,13 @@ const ProjectsPage = () => {
                             <Users className="w-4 h-4" />
                             <span className="text-sm font-medium">Active Projects</span>
                         </div>
-                        <p className="text-2xl font-bold text-slate-800">{workStats.projectsActive}</p>
+                        <p className="text-2xl font-bold text-slate-800">{userActivity?.activeProjects || 0}</p>
                     </div>
                 </div>
 
                 {/* Suggestion Banner */}
                 {(() => {
-                    const suggestion = getSuggestion(workStats.workedMinutes, workStats.isWorking)
+                    const suggestion = getSuggestion(userActivity?.workTimeToday || 0, userActivity?.currentStatus === 'active')
                     const SuggestionIcon = suggestion.icon
                     return (
                         <div className={`flex items-center justify-between p-4 rounded-lg border ${suggestion.color}`}>
@@ -282,11 +334,15 @@ const ProjectsPage = () => {
                                     <p className="text-sm opacity-90">{suggestion.message}</p>
                                 </div>
                             </div>
-                            {suggestion.text !== 'On break' && (
-                                <button className="px-4 py-2 bg-white rounded-lg font-semibold text-sm hover:shadow-md transition-all">
-                                    {suggestion.text.includes('break') || suggestion.text.includes('Break') ? 'Take Break' : 'Keep Going'}
-                                </button>
-                            )}
+                            <button
+                                onClick={handleToggleBreak}
+                                className={`px-4 py-2 rounded-lg font-semibold text-sm hover:shadow-md transition-all ${userActivity?.currentStatus === 'active'
+                                        ? 'bg-white hover:bg-red-50 text-red-700 border border-red-200'
+                                        : 'bg-white hover:bg-green-50 text-green-700 border border-green-200'
+                                    }`}
+                            >
+                                {userActivity?.currentStatus === 'active' ? 'Take a Break' : 'Resume Work'}
+                            </button>
                         </div>
                     )
                 })()}

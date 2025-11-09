@@ -156,6 +156,212 @@ module.exports.updateProfile = (req, res) => {
     );
 }
 
+// Toggle user status (active/break)
+module.exports.toggleUserStatus = (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body; // 'active' or 'break'
+
+    console.log(`Toggling status for user ID: ${id} to ${status}`);
+
+    // First get current user data
+    db.get('SELECT * FROM Users WHERE id = ?', [id], (err, user) => {
+        if (err) {
+            console.error('Error fetching user:', err);
+            return res.status(500).send({
+                success: false,
+                message: 'Error fetching user data'
+            });
+        }
+
+        if (!user) {
+            console.error('User not found with ID:', id);
+            return res.status(404).send({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        console.log('Current user status:', user.currentStatus);
+        console.log('Work session start:', user.workSessionStart);
+        console.log('Work time today:', user.workTimeToday);
+
+        const now = new Date().toISOString();
+        let updateQuery;
+        let updateParams;
+
+        if (status === 'break') {
+            // User is taking a break - save work time accumulated
+            let additionalWorkTime = 0;
+            if (user.workSessionStart && user.currentStatus === 'active') {
+                const sessionStart = new Date(user.workSessionStart);
+                const sessionEnd = new Date();
+                additionalWorkTime = Math.floor((sessionEnd - sessionStart) / 60000); // minutes
+            }
+
+            const newWorkTime = (user.workTimeToday || 0) + additionalWorkTime;
+
+            updateQuery = `UPDATE Users SET 
+                currentStatus = ?, 
+                lastBreakTime = ?, 
+                lastStatusChange = ?,
+                workTimeToday = ?,
+                workSessionStart = NULL
+                WHERE id = ?`;
+            updateParams = ['break', now, now, newWorkTime, id];
+        } else {
+            // User is returning to work - start new session
+            updateQuery = `UPDATE Users SET 
+                currentStatus = ?, 
+                lastStatusChange = ?,
+                workSessionStart = ?
+                WHERE id = ?`;
+            updateParams = ['active', now, now, id];
+        }
+
+        db.run(updateQuery, updateParams, function (err) {
+            if (err) {
+                console.error('Error updating user status:', err);
+                console.error('Query:', updateQuery);
+                console.error('Params:', updateParams);
+                return res.status(500).send({
+                    success: false,
+                    message: 'Error updating status',
+                    error: err.message
+                });
+            }
+
+            // Log the activity
+            db.run(
+                `INSERT INTO ActivityLogs (userId, activityType, status, timestamp) VALUES (?, ?, ?, ?)`,
+                [id, 'status_change', status, now],
+                (logErr) => {
+                    if (logErr) {
+                        console.error('Error logging activity:', logErr);
+                    }
+                }
+            );
+
+            // Fetch updated user data
+            db.get('SELECT * FROM Users WHERE id = ?', [id], (err, updatedUser) => {
+                if (err) {
+                    return res.status(500).send({
+                        success: false,
+                        message: 'Error fetching updated user data'
+                    });
+                }
+
+                res.status(200).send({
+                    success: true,
+                    message: `Status updated to ${status}`,
+                    user: {
+                        id: updatedUser.id,
+                        name: updatedUser.name,
+                        currentStatus: updatedUser.currentStatus,
+                        workTimeToday: updatedUser.workTimeToday,
+                        lastBreakTime: updatedUser.lastBreakTime,
+                        lastStatusChange: updatedUser.lastStatusChange
+                    }
+                });
+            });
+        });
+    });
+};
+
+// Get today's activity for a user
+module.exports.getUserActivity = (req, res) => {
+    const { id } = req.params;
+
+    console.log(`Fetching activity for user ID: ${id}`);
+
+    db.get('SELECT * FROM Users WHERE id = ?', [id], (err, user) => {
+        if (err) {
+            console.error('Error fetching user:', err);
+            return res.status(500).send({
+                success: false,
+                message: 'Error fetching user data'
+            });
+        }
+
+        if (!user) {
+            return res.status(404).send({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Calculate current work time including active session
+        let currentWorkTime = user.workTimeToday || 0;
+        if (user.currentStatus === 'active' && user.workSessionStart) {
+            const sessionStart = new Date(user.workSessionStart);
+            const now = new Date();
+            const sessionMinutes = Math.floor((now - sessionStart) / 60000);
+            currentWorkTime += sessionMinutes;
+        }
+
+        // Get tasks completed today
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayStr = today.toISOString().split('T')[0];
+
+        db.get(
+            `SELECT COUNT(*) as count FROM Tasks WHERE completedById = ? AND DATE(completionDate) = ?`,
+            [id, todayStr],
+            (err, taskResult) => {
+                if (err) {
+                    console.error('Error fetching tasks:', err);
+                }
+
+                // Get active projects count
+                db.get(
+                    `SELECT COUNT(DISTINCT projectId) as count FROM ProjectMembers WHERE userId = ? AND invitationStatus = 'approved'`,
+                    [id],
+                    (err, projectResult) => {
+                        if (err) {
+                            console.error('Error fetching projects:', err);
+                        }
+
+                        res.status(200).send({
+                            success: true,
+                            activity: {
+                                currentStatus: user.currentStatus,
+                                workTimeToday: currentWorkTime,
+                                lastBreakTime: user.lastBreakTime,
+                                lastStatusChange: user.lastStatusChange,
+                                tasksCompletedToday: taskResult?.count || 0,
+                                activeProjects: projectResult?.count || 0
+                            }
+                        });
+                    }
+                );
+            }
+        );
+    });
+};
+
+// Reset daily work time (call this at midnight via cron job)
+module.exports.resetDailyWorkTime = (req, res) => {
+    db.run(
+        `UPDATE Users SET workTimeToday = 0, workSessionStart = CASE WHEN currentStatus = 'active' THEN datetime('now') ELSE NULL END`,
+        [],
+        function (err) {
+            if (err) {
+                console.error('Error resetting daily work time:', err);
+                return res.status(500).send({
+                    success: false,
+                    message: 'Error resetting work time'
+                });
+            }
+
+            res.status(200).send({
+                success: true,
+                message: 'Daily work time reset successfully',
+                rowsAffected: this.changes
+            });
+        }
+    );
+};
+
+
 module.exports.getUserById = (req, res) => {
     const { id } = req.params;
     console.log(`Fetching user with ID: ${id}`);

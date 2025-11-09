@@ -31,6 +31,11 @@ function initializeTables() {
                 github TEXT,
                 linkedin TEXT,
                 setupCompleted INTEGER DEFAULT 0,
+                currentStatus TEXT DEFAULT 'active',
+                workTimeToday INTEGER DEFAULT 0,
+                lastBreakTime DATETIME,
+                lastStatusChange DATETIME DEFAULT CURRENT_TIMESTAMP,
+                workSessionStart DATETIME,
                 createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         `, (err) => {
@@ -38,6 +43,23 @@ function initializeTables() {
                 console.error('Error creating Users table:', err.message);
             } else {
                 console.log('Users table ready');
+
+                // Add new columns to existing table if they don't exist
+                const newColumns = [
+                    { name: 'currentStatus', definition: 'TEXT DEFAULT "active"' },
+                    { name: 'workTimeToday', definition: 'INTEGER DEFAULT 0' },
+                    { name: 'lastBreakTime', definition: 'DATETIME' },
+                    { name: 'lastStatusChange', definition: 'DATETIME' },
+                    { name: 'workSessionStart', definition: 'DATETIME' }
+                ];
+
+                newColumns.forEach(column => {
+                    db.run(`ALTER TABLE Users ADD COLUMN ${column.name} ${column.definition}`, (alterErr) => {
+                        if (alterErr && !alterErr.message.includes('duplicate column')) {
+                            console.error(`Error adding ${column.name} column:`, alterErr.message);
+                        }
+                    });
+                });
             }
         });
 
@@ -159,6 +181,34 @@ function initializeTables() {
 
         db.run(`CREATE INDEX IF NOT EXISTS idx_tasks_completed ON Tasks(completed)`, (err) => {
             if (err) console.error('Error creating tasks completed index:', err.message);
+        });
+
+        // Create ActivityLogs table for tracking work sessions and status changes
+        db.run(`
+            CREATE TABLE IF NOT EXISTS ActivityLogs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                userId INTEGER NOT NULL,
+                activityType TEXT NOT NULL,
+                status TEXT,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                metadata TEXT,
+                FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE
+            )
+        `, (err) => {
+            if (err) {
+                console.error('Error creating ActivityLogs table:', err.message);
+            } else {
+                console.log('ActivityLogs table ready');
+            }
+        });
+
+        // Create indexes for ActivityLogs table
+        db.run(`CREATE INDEX IF NOT EXISTS idx_activityLogs_userId ON ActivityLogs(userId)`, (err) => {
+            if (err) console.error('Error creating activityLogs userId index:', err.message);
+        });
+
+        db.run(`CREATE INDEX IF NOT EXISTS idx_activityLogs_timestamp ON ActivityLogs(timestamp)`, (err) => {
+            if (err) console.error('Error creating activityLogs timestamp index:', err.message);
         });
     });
 }
