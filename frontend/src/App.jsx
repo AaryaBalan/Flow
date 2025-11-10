@@ -13,6 +13,7 @@ import ProjectAIPage from './pages/project/AIPage';
 import ChatPage from './pages/project/ChatPage';
 import PeoplePage from './pages/project/PeoplePage';
 import StatsPage from './pages/project/StatsPage';
+import AiComponent from './components/AiComponent';
 
 function AppContent() {
   const [user, setUser] = useState(null);
@@ -75,6 +76,8 @@ function AppContent() {
         <Route path="ai" element={<AIPage />} />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="profile/:userId" element={<ProfilePage />} />
+        <Route path="/abc" element={<AiComponent userInput={'hello'}/>} />
+
       </Route>
       <Route path="/project/:projectId" element={<SingleProjectPage />}>
         <Route index element={<Navigate to="task" replace />} />

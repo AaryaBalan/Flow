@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, X, Users, Calendar, Clock, Coffee, Target, TrendingUp, Copy, Check, UserPlus } from 'lucide-react'
+import { Plus, X, Users, Calendar, Clock, Coffee, Target, TrendingUp, Copy, Check, UserPlus, MoreVertical, Edit, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import axios from 'axios'
 import { v4 as uuidv4 } from 'uuid'
@@ -8,6 +8,9 @@ import { v4 as uuidv4 } from 'uuid'
 const ProjectsPage = () => {
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [isJoinModalOpen, setIsJoinModalOpen] = useState(false)
+    const [isEditMode, setIsEditMode] = useState(false)
+    const [editingProjectId, setEditingProjectId] = useState(null)
+    const [openMenuId, setOpenMenuId] = useState(null)
     const [joinCode, setJoinCode] = useState('')
     const [joinCodeInput, setJoinCodeInput] = useState('')
     const [copiedCodeId, setCopiedCodeId] = useState(null) // Track which code was copied
@@ -64,6 +67,18 @@ const ProjectsPage = () => {
 
         return () => clearInterval(activityInterval)
     }, [currentUser])
+
+    // Close menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (openMenuId && !e.target.closest('.relative')) {
+                setOpenMenuId(null)
+            }
+        }
+
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [openMenuId])
 
     const fetchUserActivity = async () => {
         if (!currentUser?.id) return
@@ -123,24 +138,83 @@ const ProjectsPage = () => {
         const authorName = currentUser?.name || currentUser?.fullName || currentUser?.email?.split('@')[0] || 'User'
 
         try {
-            const response = await axios.post('http://localhost:3000/api/projects/create', {
-                title: formData.title,
-                description: formData.description,
-                authorId: currentUser.id,
-                authorName: authorName,
-                joinCode: joinCode // Send the UUID-generated code to backend
+            if (isEditMode && editingProjectId) {
+                // Update existing project
+                const response = await axios.put(`http://localhost:3000/api/projects/${editingProjectId}`, {
+                    title: formData.title,
+                    description: formData.description,
+                    userId: currentUser.id
+                })
+
+                if (response.data.success) {
+                    toast.success('Project updated successfully!')
+                    await fetchUserProjects()
+                    setIsModalOpen(false)
+                    setIsEditMode(false)
+                    setEditingProjectId(null)
+                    setFormData({ title: '', description: '', author: '' })
+                }
+            } else {
+                // Create new project
+                const response = await axios.post('http://localhost:3000/api/projects/create', {
+                    title: formData.title,
+                    description: formData.description,
+                    authorId: currentUser.id,
+                    authorName: authorName,
+                    joinCode: joinCode
+                })
+
+                if (response.data.success) {
+                    toast.success('Project created successfully!')
+                    await fetchUserProjects()
+                    setIsModalOpen(false)
+                    setFormData({ title: '', description: '', author: '' })
+                }
+            }
+        } catch (error) {
+            console.error('Error saving project:', error)
+            toast.error(error.response?.data?.message || 'Failed to save project')
+        }
+    }
+
+    const handleEditProject = (project) => {
+        setFormData({
+            title: project.title,
+            description: project.description,
+            author: project.authorName
+        })
+        setEditingProjectId(project.id)
+        setIsEditMode(true)
+        setIsModalOpen(true)
+        setOpenMenuId(null)
+    }
+
+    const handleDeleteProject = async (projectId) => {
+        if (!window.confirm('Are you sure you want to delete this project? All members will be removed and this action cannot be undone.')) {
+            return
+        }
+
+        try {
+            const response = await axios.delete(`http://localhost:3000/api/projects/${projectId}`, {
+                data: { userId: currentUser.id }
             })
 
             if (response.data.success) {
-                toast.success('Project created successfully!')
-                await fetchUserProjects() // Refresh projects list
-                setIsModalOpen(false)
-                setFormData({ title: '', description: '', author: '' })
+                toast.success('Project deleted successfully!')
+                await fetchUserProjects()
+                setOpenMenuId(null)
             }
         } catch (error) {
-            console.error('Error creating project:', error)
-            toast.error(error.response?.data?.message || 'Failed to create project')
+            console.error('Error deleting project:', error)
+            toast.error(error.response?.data?.message || 'Failed to delete project')
         }
+    }
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false)
+        setIsEditMode(false)
+        setEditingProjectId(null)
+        setFormData({ title: '', description: '', author: '' })
     }
 
     const handleJoinProject = async (e) => {
@@ -415,14 +489,57 @@ const ProjectsPage = () => {
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-start justify-between gap-2 mb-2">
                                                 <h3 className="text-lg font-semibold text-slate-800 truncate">{project.title}</h3>
-                                                <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${isPending
-                                                    ? 'bg-amber-100 text-amber-700 border border-amber-300'
-                                                    : project.status === 'Active'
-                                                        ? 'bg-green-100 text-green-700'
-                                                        : 'bg-blue-100 text-blue-700'
-                                                    }`}>
-                                                    {isPending ? 'Pending' : project.status}
-                                                </span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${isPending
+                                                        ? 'bg-amber-100 text-amber-700 border border-amber-300'
+                                                        : project.status === 'Active'
+                                                            ? 'bg-green-100 text-green-700'
+                                                            : 'bg-blue-100 text-blue-700'
+                                                        }`}>
+                                                        {isPending ? 'Pending' : project.status}
+                                                    </span>
+
+                                                    {/* Three Dot Menu - Only show for project owner */}
+                                                    {!isPending && project.authorId == currentUser?.id && (
+                                                        <div className="relative">
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.preventDefault()
+                                                                    setOpenMenuId(openMenuId === project.id ? null : project.id)
+                                                                }}
+                                                                className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
+                                                            >
+                                                                <MoreVertical className="w-5 h-5 text-slate-600" />
+                                                            </button>
+
+                                                            {/* Dropdown Menu */}
+                                                            {openMenuId === project.id && (
+                                                                <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-10 min-w-[150px]">
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault()
+                                                                            handleEditProject(project)
+                                                                        }}
+                                                                        className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                                                    >
+                                                                        <Edit className="w-4 h-4" />
+                                                                        Edit Project
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault()
+                                                                            handleDeleteProject(project.id)
+                                                                        }}
+                                                                        className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                                                    >
+                                                                        <Trash2 className="w-4 h-4" />
+                                                                        Delete Project
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                             <p className="text-sm text-slate-600 line-clamp-2 mb-3">
                                                 {project.description}
@@ -540,11 +657,15 @@ const ProjectsPage = () => {
                         {/* Modal Header */}
                         <div className="flex items-center justify-between p-6 border-b border-slate-200">
                             <div>
-                                <h2 className="text-2xl font-bold text-slate-800">Create New Project</h2>
-                                <p className="text-sm text-slate-600 mt-1">Fill in the details to start a new project</p>
+                                <h2 className="text-2xl font-bold text-slate-800">
+                                    {isEditMode ? 'Edit Project' : 'Create New Project'}
+                                </h2>
+                                <p className="text-sm text-slate-600 mt-1">
+                                    {isEditMode ? 'Update your project details' : 'Fill in the details to start a new project'}
+                                </p>
                             </div>
                             <button
-                                onClick={() => setIsModalOpen(false)}
+                                onClick={handleCloseModal}
                                 className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
                                 aria-label="Close modal"
                             >
@@ -554,39 +675,41 @@ const ProjectsPage = () => {
 
                         {/* Modal Body */}
                         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                            {/* Join Code Field (Read-only) */}
-                            <div>
-                                <label htmlFor="joinCode" className="block text-sm font-semibold text-slate-700 mb-2">
-                                    Join Code
-                                </label>
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        id="joinCode"
-                                        value={joinCode}
-                                        readOnly
-                                        className="flex-1 px-4 py-3 border border-slate-300 rounded-lg bg-slate-50 text-slate-700 font-mono text-lg font-semibold cursor-not-allowed"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => handleCopyCode(joinCode, 'modal')}
-                                        className="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2 font-medium"
-                                    >
-                                        {copiedCodeId === 'modal' ? (
-                                            <>
-                                                <Check className="w-5 h-5" />
-                                                <span>Copied!</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Copy className="w-5 h-5" />
-                                                <span>Copy</span>
-                                            </>
-                                        )}
-                                    </button>
+                            {/* Join Code Field (Read-only) - Only show when creating */}
+                            {!isEditMode && (
+                                <div>
+                                    <label htmlFor="joinCode" className="block text-sm font-semibold text-slate-700 mb-2">
+                                        Join Code
+                                    </label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            id="joinCode"
+                                            value={joinCode}
+                                            readOnly
+                                            className="flex-1 px-4 py-3 border border-slate-300 rounded-lg bg-slate-50 text-slate-700 font-mono text-lg font-semibold cursor-not-allowed"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => handleCopyCode(joinCode, 'modal')}
+                                            className="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2 font-medium"
+                                        >
+                                            {copiedCodeId === 'modal' ? (
+                                                <>
+                                                    <Check className="w-5 h-5" />
+                                                    <span>Copied!</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Copy className="w-5 h-5" />
+                                                    <span>Copy</span>
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                    <p className="text-xs text-slate-500 mt-2">Share this code with others to let them join your project</p>
                                 </div>
-                                <p className="text-xs text-slate-500 mt-2">Share this code with others to let them join your project</p>
-                            </div>
+                            )}
 
                             {/* Title Field */}
                             <div>
@@ -644,11 +767,11 @@ const ProjectsPage = () => {
                                     type="submit"
                                     className="flex-1 px-6 py-3 bg-linear-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all"
                                 >
-                                    Create Project
+                                    {isEditMode ? 'Update Project' : 'Create Project'}
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => setIsModalOpen(false)}
+                                    onClick={handleCloseModal}
                                     className="px-6 py-3 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors"
                                 >
                                     Cancel

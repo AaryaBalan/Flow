@@ -438,3 +438,148 @@ exports.rejectRequest = (req, res) => {
         });
     });
 };
+
+// Update project
+exports.updateProject = (req, res) => {
+    const { id } = req.params;
+    const { title, description, userId } = req.body;
+
+    if (!title || !description) {
+        return res.status(400).json({
+            success: false,
+            message: 'Title and description are required'
+        });
+    }
+
+    // First check if the user is the project author
+    const checkQuery = `SELECT authorId FROM Projects WHERE id = ?`;
+
+    db.get(checkQuery, [id], (err, project) => {
+        if (err) {
+            console.error('Error checking project ownership:', err.message);
+            return res.status(500).json({
+                success: false,
+                message: 'Error checking project ownership',
+                error: err.message
+            });
+        }
+
+        if (!project) {
+            return res.status(404).json({
+                success: false,
+                message: 'Project not found'
+            });
+        }
+
+        if (project.authorId != userId) {
+            return res.status(403).json({
+                success: false,
+                message: 'Only the project owner can update the project'
+            });
+        }
+
+        // Update the project
+        const updateQuery = `
+            UPDATE Projects 
+            SET title = ?, description = ?
+            WHERE id = ?
+        `;
+
+        db.run(updateQuery, [title, description, id], function (updateErr) {
+            if (updateErr) {
+                console.error('Error updating project:', updateErr.message);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Error updating project',
+                    error: updateErr.message
+                });
+            }
+
+            res.status(200).json({
+                success: true,
+                message: 'Project updated successfully'
+            });
+        });
+    });
+};
+
+// Delete project
+exports.deleteProject = (req, res) => {
+    const { id } = req.params;
+    const { userId } = req.body;
+
+    // First check if the user is the project author
+    const checkQuery = `SELECT authorId FROM Projects WHERE id = ?`;
+
+    db.get(checkQuery, [id], (err, project) => {
+        if (err) {
+            console.error('Error checking project ownership:', err.message);
+            return res.status(500).json({
+                success: false,
+                message: 'Error checking project ownership',
+                error: err.message
+            });
+        }
+
+        if (!project) {
+            return res.status(404).json({
+                success: false,
+                message: 'Project not found'
+            });
+        }
+
+        if (project.authorId != userId) {
+            return res.status(403).json({
+                success: false,
+                message: 'Only the project owner can delete the project'
+            });
+        }
+
+        // Delete all project members first
+        const deleteMembersQuery = `DELETE FROM ProjectMembers WHERE projectId = ?`;
+
+        db.run(deleteMembersQuery, [id], (memberErr) => {
+            if (memberErr) {
+                console.error('Error deleting project members:', memberErr.message);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Error deleting project members',
+                    error: memberErr.message
+                });
+            }
+
+            // Delete all tasks associated with the project
+            const deleteTasksQuery = `DELETE FROM Tasks WHERE projectId = ?`;
+
+            db.run(deleteTasksQuery, [id], (taskErr) => {
+                if (taskErr) {
+                    console.error('Error deleting project tasks:', taskErr.message);
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Error deleting project tasks',
+                        error: taskErr.message
+                    });
+                }
+
+                // Delete the project
+                const deleteProjectQuery = `DELETE FROM Projects WHERE id = ?`;
+
+                db.run(deleteProjectQuery, [id], function (deleteErr) {
+                    if (deleteErr) {
+                        console.error('Error deleting project:', deleteErr.message);
+                        return res.status(500).json({
+                            success: false,
+                            message: 'Error deleting project',
+                            error: deleteErr.message
+                        });
+                    }
+
+                    res.status(200).json({
+                        success: true,
+                        message: 'Project and all associated data deleted successfully'
+                    });
+                });
+            });
+        });
+    });
+};

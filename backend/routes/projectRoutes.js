@@ -26,4 +26,10 @@ router.put('/:projectId/requests/:userId/reject', projectControllers.rejectReque
 // Get project by ID
 router.get('/:projectId', projectControllers.getProjectById);
 
+// Update project
+router.put('/:id', projectControllers.updateProject);
+
+// Delete project
+router.delete('/:id', projectControllers.deleteProject);
+
 module.exports = router;
