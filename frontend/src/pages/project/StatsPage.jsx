@@ -4,6 +4,7 @@ import { TrendingUp, Users, CheckCircle, Clock, ListTodo, UserCheck, MessageSqua
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
 import axios from 'axios'
 import toast from 'react-hot-toast'
+import API_BASE_URL from '../../config/api'
 
 const StatsPage = () => {
     const { projectId } = useParams()
@@ -22,13 +23,13 @@ const StatsPage = () => {
         try {
             setIsLoading(true)
             // Fetch tasks
-            const tasksResponse = await axios.get(`http://localhost:3000/api/tasks/project/${projectId}`)
+            const tasksResponse = await axios.get(`${API_BASE_URL}/api/tasks/project/${projectId}`)
             if (tasksResponse.data.success) {
                 setTasks(tasksResponse.data.tasks)
             }
 
             // Fetch project members
-            const membersResponse = await axios.get(`http://localhost:3000/api/projects/${projectId}/members`)
+            const membersResponse = await axios.get(`${API_BASE_URL}/api/projects/${projectId}/members`)
             if (membersResponse.data.success) {
                 setMembers(membersResponse.data.members)
             }

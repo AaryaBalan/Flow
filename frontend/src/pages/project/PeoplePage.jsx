@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Mail, UserPlus, Crown, Check, X } from 'lucide-react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
+import API_BASE_URL from '../../config/api'
 
 const PeoplePage = () => {
     const { projectId } = useParams()
@@ -24,7 +25,7 @@ const PeoplePage = () => {
 
     const fetchProjectDetails = async () => {
         try {
-            const response = await axios.get(`http://localhost:3000/api/projects/${projectId}`)
+            const response = await axios.get(`${API_BASE_URL}/api/projects/${projectId}`)
             if (response.data.success) {
                 setProject(response.data.project)
             }
@@ -36,7 +37,7 @@ const PeoplePage = () => {
     const fetchProjectMembers = async () => {
         try {
             setIsLoading(true)
-            const response = await axios.get(`http://localhost:3000/api/projects/${projectId}/members`)
+            const response = await axios.get(`${API_BASE_URL}/api/projects/${projectId}/members`)
 
             if (response.data.success) {
                 setTeamMembers(response.data.members)
@@ -51,7 +52,7 @@ const PeoplePage = () => {
 
     const fetchPendingRequests = async () => {
         try {
-            const response = await axios.get(`http://localhost:3000/api/projects/${projectId}/requests`)
+            const response = await axios.get(`${API_BASE_URL}/api/projects/${projectId}/requests`)
             if (response.data.success) {
                 setPendingRequests(response.data.requests)
             }
@@ -72,7 +73,7 @@ const PeoplePage = () => {
     const handleApprove = async (request) => {
         try {
             const response = await axios.put(
-                `http://localhost:3000/api/projects/${projectId}/requests/${request.id}/approve`
+                `${API_BASE_URL}/api/projects/${projectId}/requests/${request.id}/approve`
             )
 
             if (response.data.success) {
@@ -90,7 +91,7 @@ const PeoplePage = () => {
     const handleDeny = async (requestId, userName) => {
         try {
             const response = await axios.put(
-                `http://localhost:3000/api/projects/${projectId}/requests/${requestId}/reject`
+                `${API_BASE_URL}/api/projects/${projectId}/requests/${requestId}/reject`
             )
 
             if (response.data.success) {

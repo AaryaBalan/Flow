@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react'
 import toast, { Toaster } from 'react-hot-toast';
 import axios from 'axios';
+import API_BASE_URL from '../config/api'
 
 export default function AuthPage() {
     const [tab, setTab] = useState('signIn') // 'signIn' | 'signUp'
@@ -42,12 +43,12 @@ export default function AuthPage() {
         }));
 
         try {
-            const isExist = await axios.get(`http://localhost:3000/api/users/email/${signUpData.email}`);
+            const isExist = await axios.get(`${API_BASE_URL}/api/users/email/${signUpData.email}`);
             if (isExist.data.exist) {
-                toast.error("Email is already registered");
+                toast.error('Email already exists');
                 return;
             }
-            const response = await axios.post('http://localhost:3000/api/users/create', {
+            const response = await axios.post(`${API_BASE_URL}/api/users/create`, {
                 name: signUpData.name,
                 email: signUpData.email,
                 password: signUpData.password
@@ -76,7 +77,7 @@ export default function AuthPage() {
         }
 
         try {
-            const response = await axios.get(`http://localhost:3000/api/users/email/${signInData.email}`);
+            const response = await axios.get(`${API_BASE_URL}/api/users/email/${signInData.email}`);
             if (!response.data.exist) {
                 toast.error("Email not registered");
                 return;

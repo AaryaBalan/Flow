@@ -4,6 +4,7 @@ import { Plus, X, Users, Calendar, Clock, Coffee, Target, TrendingUp, Copy, Chec
 import toast from 'react-hot-toast'
 import axios from 'axios'
 import { v4 as uuidv4 } from 'uuid'
+import API_BASE_URL from '../config/api'
 
 const ProjectsPage = () => {
     const [isModalOpen, setIsModalOpen] = useState(false)
@@ -84,7 +85,7 @@ const ProjectsPage = () => {
         if (!currentUser?.id) return
 
         try {
-            const response = await axios.get(`http://localhost:3000/api/users/${currentUser.id}/activity`)
+            const response = await axios.get(`${API_BASE_URL}/api/users/${currentUser.id}/activity`)
             if (response.data.success) {
                 setUserActivity(response.data.activity)
             }
@@ -98,7 +99,7 @@ const ProjectsPage = () => {
 
         try {
             setIsLoading(true)
-            const response = await axios.get(`http://localhost:3000/api/projects/user/${currentUser.id}`)
+            const response = await axios.get(`${API_BASE_URL}/api/projects/user/${currentUser.id}`)
 
             if (response.data.success) {
                 setProjects(response.data.projects)
@@ -140,7 +141,7 @@ const ProjectsPage = () => {
         try {
             if (isEditMode && editingProjectId) {
                 // Update existing project
-                const response = await axios.put(`http://localhost:3000/api/projects/${editingProjectId}`, {
+                const response = await axios.put(`${API_BASE_URL}/api/projects/${editingProjectId}`, {
                     title: formData.title,
                     description: formData.description,
                     userId: currentUser.id
@@ -156,7 +157,7 @@ const ProjectsPage = () => {
                 }
             } else {
                 // Create new project
-                const response = await axios.post('http://localhost:3000/api/projects/create', {
+                const response = await axios.post(`${API_BASE_URL}/api/projects/create`, {
                     title: formData.title,
                     description: formData.description,
                     authorId: currentUser.id,
@@ -195,7 +196,7 @@ const ProjectsPage = () => {
         }
 
         try {
-            const response = await axios.delete(`http://localhost:3000/api/projects/${projectId}`, {
+            const response = await axios.delete(`${API_BASE_URL}/api/projects/${projectId}`, {
                 data: { userId: currentUser.id }
             })
 
@@ -231,7 +232,7 @@ const ProjectsPage = () => {
         }
 
         try {
-            const response = await axios.post('http://localhost:3000/api/projects/join', {
+            const response = await axios.post(`${API_BASE_URL}/api/projects/join`, {
                 joinCode: joinCodeInput,
                 userId: currentUser.id
             })
@@ -257,7 +258,7 @@ const ProjectsPage = () => {
         const newStatus = userActivity?.currentStatus === 'active' ? 'break' : 'active'
 
         try {
-            const response = await axios.post(`http://localhost:3000/api/users/${currentUser.id}/status`, {
+            const response = await axios.post(`${API_BASE_URL}/api/users/${currentUser.id}/status`, {
                 status: newStatus
             })
 

@@ -12,6 +12,7 @@ import {
     FileText
 } from 'lucide-react'
 import axios from 'axios'
+import API_BASE_URL from '../config/api'
 
 const SingleProjectPage = () => {
     const { projectId } = useParams()
@@ -26,7 +27,7 @@ const SingleProjectPage = () => {
     useEffect(() => {
         const fetchProjectDetails = async () => {
             try {
-                const response = await axios.get(`http://localhost:3000/api/projects/${projectId}`)
+                const response = await axios.get(`${API_BASE_URL}/api/projects/${projectId}`)
                 if (response.data.success) {
                     setProjectName(response.data.project.title)
                 }

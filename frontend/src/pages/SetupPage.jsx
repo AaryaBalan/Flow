@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import axios from 'axios'
 import { useEffect } from 'react'
+import API_BASE_URL from '../config/api'
 
 const SetupPage = () => {
     const navigate = useNavigate()
@@ -59,8 +60,8 @@ const SetupPage = () => {
     const handleSetup = async (e) => {
         e.preventDefault()
         const user = JSON.parse(localStorage.getItem('user'))
-        await axios.post('http://localhost:3000/api/users/updateSetup', {...formData, userId: user.id})
-        localStorage.setItem('user', JSON.stringify({...user, ...formData, setupCompleted: 1}))
+        await axios.post(`${API_BASE_URL}/api/users/updateSetup`, { ...formData, userId: user.id })
+        localStorage.setItem('user', JSON.stringify({ ...user, ...formData, setupCompleted: 1 }))
         setTimeout(() => {
             location.reload()
         }, 1000)

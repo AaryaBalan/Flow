@@ -6,6 +6,7 @@ import toast, { Toaster } from 'react-hot-toast'
 import ReactQuill from 'react-quill-new'
 import 'react-quill-new/dist/quill.snow.css'
 import '../../styles/quill-custom.css'
+import API_BASE_URL from '../../config/api'
 
 const NoteDetailPage = () => {
     const { projectId, noteId } = useParams()
@@ -46,7 +47,7 @@ const NoteDetailPage = () => {
         try {
             setIsLoading(true)
             const response = await axios.get(
-                `http://localhost:3000/api/notes/${noteId}?userId=${currentUser.id}`
+                `${API_BASE_URL}/api/notes/${noteId}?userId=${currentUser.id}`
             )
 
             if (response.data.success) {
@@ -74,7 +75,7 @@ const NoteDetailPage = () => {
     const fetchProjectMembers = async () => {
         try {
             const response = await axios.get(
-                `http://localhost:3000/api/projects/${projectId}/members`
+                `${API_BASE_URL}/api/projects/${projectId}/members`
             )
             if (response.data.success) {
                 // Fetch permissions for each member
@@ -82,7 +83,7 @@ const NoteDetailPage = () => {
                     response.data.members.map(async (member) => {
                         try {
                             const permResponse = await axios.get(
-                                `http://localhost:3000/api/notes/${noteId}/permissions/${member.id}`
+                                `${API_BASE_URL}/api/notes/${noteId}/permissions/${member.id}`
                             )
                             return {
                                 ...member,
@@ -105,15 +106,34 @@ const NoteDetailPage = () => {
         }
     }
 
+    const cleanHtmlContent = (html) => {
+        // Remove trailing empty paragraphs and line breaks
+        let cleaned = html.trim()
+        // Remove multiple trailing <p><br></p> or <p></p> tags
+        cleaned = cleaned.replace(/(<p>(&nbsp;|\s|<br>)*<\/p>\s*)+$/gi, '')
+        // Remove leading empty paragraphs
+        cleaned = cleaned.replace(/^(<p>(&nbsp;|\s|<br>)*<\/p>\s*)+/gi, '')
+        return cleaned.trim()
+    }
+
     const handleUpdate = async (e) => {
         e.preventDefault()
 
+        // Trim title and clean content to remove excessive whitespace
+        const trimmedTitle = formData.title.trim()
+        const cleanedContent = cleanHtmlContent(formData.content)
+
+        if (!trimmedTitle) {
+            toast.error('Title cannot be empty')
+            return
+        }
+
         try {
             const response = await axios.put(
-                `http://localhost:3000/api/notes/${noteId}`,
+                `${API_BASE_URL}/api/notes/${noteId}`,
                 {
-                    title: formData.title,
-                    content: formData.content,
+                    title: trimmedTitle,
+                    content: cleanedContent,
                     userId: currentUser.id,
                     userName: currentUser.name || currentUser.email?.split('@')[0] || 'User'
                 }
@@ -138,7 +158,7 @@ const NoteDetailPage = () => {
 
         try {
             const response = await axios.delete(
-                `http://localhost:3000/api/notes/${noteId}`,
+                `${API_BASE_URL}/api/notes/${noteId}`,
                 { data: { userId: currentUser.id } }
             )
 
@@ -156,7 +176,7 @@ const NoteDetailPage = () => {
         try {
             console.log('Granting permission:', { userId, currentUser, canEdit, canDelete })
             const response = await axios.post(
-                `http://localhost:3000/api/notes/${noteId}/permissions`,
+                `${API_BASE_URL}/api/notes/${noteId}/permissions`,
                 {
                     targetUserId: userId,
                     canEdit,
@@ -221,42 +241,42 @@ const NoteDetailPage = () => {
 
     return (
         <>
-            <div className="max-w-4xl mx-auto space-y-6">
+            <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 px-2 sm:px-0">
                 {/* Header */}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
                     <button
                         onClick={() => navigate(`/project/${projectId}/notes`)}
-                        className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
+                        className="flex items-center gap-2 px-3 sm:px-4 py-2 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors text-sm sm:text-base self-start"
                     >
-                        <ArrowLeft className="w-5 h-5" />
+                        <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
                         Back to Notes
                     </button>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                         {canManagePermissions && (
                             <button
                                 onClick={() => setShowPermissions(!showPermissions)}
-                                className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors"
+                                className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm sm:text-base"
                             >
-                                <Lock className="w-5 h-5" />
-                                Permissions
+                                <Lock className="w-4 h-4 sm:w-5 sm:h-5" />
+                                <span className="hidden sm:inline">Permissions</span>
                             </button>
                         )}
                         {canEdit && !isEditing && (
                             <button
                                 onClick={() => setIsEditing(true)}
-                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
                             >
-                                <Edit className="w-5 h-5" />
-                                Edit
+                                <Edit className="w-4 h-4 sm:w-5 sm:h-5" />
+                                <span className="hidden sm:inline">Edit</span>
                             </button>
                         )}
                         {canDelete && !isEditing && (
                             <button
                                 onClick={handleDelete}
-                                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                                className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm sm:text-base"
                             >
-                                <Trash2 className="w-5 h-5" />
-                                Delete
+                                <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                                <span className="hidden sm:inline">Delete</span>
                             </button>
                         )}
                     </div>
@@ -264,26 +284,26 @@ const NoteDetailPage = () => {
 
                 {/* Permission Management */}
                 {showPermissions && canManagePermissions && (
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                        <h3 className="text-lg font-semibold text-slate-800 mb-4">Manage Permissions</h3>
-                        <div className="space-y-3">
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6">
+                        <h3 className="text-base sm:text-lg font-semibold text-slate-800 mb-3 sm:mb-4">Manage Permissions</h3>
+                        <div className="space-y-2 sm:space-y-3">
                             {projectMembers.filter(member => member.id !== currentUser.id).map(member => {
                                 const hasEditPermission = member.id === note.createdBy || member.canEdit
                                 const hasDeletePermission = member.id === note.createdBy || member.canDelete
 
                                 return (
-                                    <div key={member.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+                                    <div key={member.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-slate-50 rounded-lg">
+                                        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm sm:text-base shrink-0">
                                                 {member.name?.charAt(0).toUpperCase() || 'U'}
                                             </div>
-                                            <div>
-                                                <p className="font-medium text-slate-800">{member.name}</p>
-                                                <p className="text-xs text-slate-500">{member.email}</p>
+                                            <div className="min-w-0 flex-1">
+                                                <p className="font-medium text-slate-800 text-sm sm:text-base truncate">{member.name}</p>
+                                                <p className="text-xs text-slate-500 truncate">{member.email}</p>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-3">
-                                            <label className="flex items-center gap-2 text-sm">
+                                        <div className="flex items-center gap-2 sm:gap-3 ml-10 sm:ml-0">
+                                            <label className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
                                                 <input
                                                     type="checkbox"
                                                     checked={hasEditPermission}
@@ -293,7 +313,7 @@ const NoteDetailPage = () => {
                                                 />
                                                 <span className="text-slate-700">Can Edit</span>
                                             </label>
-                                            <label className="flex items-center gap-2 text-sm">
+                                            <label className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
                                                 <input
                                                     type="checkbox"
                                                     checked={hasDeletePermission}
@@ -313,8 +333,8 @@ const NoteDetailPage = () => {
 
                 {/* Note Content */}
                 {isEditing ? (
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                        <form onSubmit={handleUpdate} className="space-y-4">
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6">
+                        <form onSubmit={handleUpdate} className="space-y-3 sm:space-y-4">
                             {/* Title */}
                             <div>
                                 <label className="block text-sm font-semibold text-slate-700 mb-2">
@@ -324,7 +344,7 @@ const NoteDetailPage = () => {
                                     type="text"
                                     value={formData.title}
                                     onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     required
                                 />
                             </div>
@@ -343,17 +363,18 @@ const NoteDetailPage = () => {
                                         formats={formats}
                                         placeholder="Write your note content here..."
                                         style={{ height: '400px', marginBottom: '50px' }}
+                                        className="text-sm sm:text-base"
                                     />
                                 </div>
                             </div>
 
                             {/* Actions */}
-                            <div className="flex items-center gap-3 pt-4">
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 pt-4">
                                 <button
                                     type="submit"
-                                    className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+                                    className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
                                 >
-                                    <Save className="w-5 h-5" />
+                                    <Save className="w-4 h-4 sm:w-5 sm:h-5" />
                                     Save Changes
                                 </button>
                                 <button
@@ -365,7 +386,7 @@ const NoteDetailPage = () => {
                                             content: note.content
                                         })
                                     }}
-                                    className="px-6 py-3 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors"
+                                    className="px-4 sm:px-6 py-2.5 sm:py-3 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors text-sm sm:text-base"
                                 >
                                     Cancel
                                 </button>
@@ -373,21 +394,21 @@ const NoteDetailPage = () => {
                         </form>
                     </div>
                 ) : (
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 md:p-8">
                         {/* Title */}
-                        <h1 className="text-4xl font-bold text-slate-900 mb-6">
+                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-4 sm:mb-6 wrap-break-word">
                             {note.title}
                         </h1>
 
                         {/* Metadata */}
-                        <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600 mb-8 pb-6 border-b border-slate-200">
-                            <div className="flex items-center gap-2">
-                                <User className="w-4 h-4" />
-                                <span>Created by <strong>{note.createdByName}</strong></span>
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-slate-600 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-slate-200">
+                            <div className="flex items-center gap-1.5 sm:gap-2">
+                                <User className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" />
+                                <span className="break-all">Created by <strong>{note.createdByName}</strong></span>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <Calendar className="w-4 h-4" />
-                                <span>{(() => {
+                            <div className="flex items-center gap-1.5 sm:gap-2">
+                                <Calendar className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" />
+                                <span className="whitespace-nowrap">{(() => {
                                     const utcDate = note.createdAt.endsWith('Z') ? note.createdAt : note.createdAt + 'Z'
                                     return new Date(utcDate).toLocaleDateString('en-IN', {
                                         timeZone: 'Asia/Kolkata',
@@ -419,9 +440,10 @@ const NoteDetailPage = () => {
 
                         {/* Formatted Content */}
                         <div
-                            className="prose prose-slate prose-lg max-w-none text-slate-700 leading-relaxed ql-editor"
+                            className="prose-slate prose-lg max-w-none text-slate-700 leading-relaxed ql-editor"
                             style={{
-                                wordBreak: 'break-word'
+                                wordBreak: 'break-word',
+                                textAlign: 'justify'
                             }}
                             dangerouslySetInnerHTML={{ __html: note.content }}
                         />

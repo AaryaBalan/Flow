@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import EditProfileModal from '../components/EditProfileModal'
 import toast from 'react-hot-toast'
 import axios from 'axios'
+import API_BASE_URL from '../config/api'
 
 const ProfilePage = () => {
     const navigate = useNavigate()
@@ -47,7 +48,7 @@ const ProfilePage = () => {
     const fetchUserById = async (id) => {
         try {
             setIsLoading(true)
-            const response = await axios.get(`http://localhost:3000/api/users/${id}`)
+            const response = await axios.get(`${API_BASE_URL}/api/users/${id}`)
             if (response.data.success) {
                 setUser(response.data.user)
             }
@@ -61,7 +62,7 @@ const ProfilePage = () => {
 
     const fetchUserActivity = async (id) => {
         try {
-            const response = await axios.get(`http://localhost:3000/api/users/${id}/activity`)
+            const response = await axios.get(`${API_BASE_URL}/api/users/${id}/activity`)
             if (response.data.success) {
                 setActivity(response.data.activity)
             }
@@ -95,7 +96,7 @@ const ProfilePage = () => {
     const handleSaveProfile = async (updatedData) => {
         try {
             // Call backend API to update profile
-            const response = await axios.put(`http://localhost:3000/api/users/profile/${user.id}`, updatedData)
+            const response = await axios.put(`${API_BASE_URL}/api/users/profile/${user.id}`, updatedData)
 
             if (response.data.success) {
                 // Update localStorage with new data

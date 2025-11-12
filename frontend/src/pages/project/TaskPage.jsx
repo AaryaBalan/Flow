@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { Plus, CheckCircle, Circle, X, User, Lock, LockOpen, Trash2, RefreshCw } from 'lucide-react'
 import axios from 'axios'
 import toast, { Toaster } from 'react-hot-toast';
+import API_BASE_URL from '../../config/api'
 
 const TaskPage = () => {
     const { projectId } = useParams()
@@ -69,7 +70,7 @@ const TaskPage = () => {
                 setIsRefreshing(true)
             }
 
-            const response = await axios.get(`http://localhost:3000/api/tasks/project/${projectId}`)
+            const response = await axios.get(`${API_BASE_URL}/api/tasks/project/${projectId}`)
 
             if (response.data.success) {
                 setTasks(response.data.tasks)
@@ -102,7 +103,7 @@ const TaskPage = () => {
         }
 
         try {
-            const response = await axios.post('http://localhost:3000/api/tasks/create', {
+            const response = await axios.post(`${API_BASE_URL}/api/tasks/create`, {
                 projectId: projectId,
                 title: formData.title,
                 description: formData.description,
@@ -136,7 +137,7 @@ const TaskPage = () => {
         }
 
         try {
-            const response = await axios.put(`http://localhost:3000/api/tasks/${taskId}/toggle`, {
+            const response = await axios.put(`${API_BASE_URL}/api/tasks/${taskId}/toggle`, {
                 userId: currentUser.id,
                 userName: currentUser.name || currentUser.email?.split('@')[0] || 'User'
             })
@@ -169,7 +170,7 @@ const TaskPage = () => {
         }
 
         try {
-            const response = await axios.delete(`http://localhost:3000/api/tasks/${taskId}`, {
+            const response = await axios.delete(`${API_BASE_URL}/api/tasks/${taskId}`, {
                 data: { userId: currentUser.id }
             })
 

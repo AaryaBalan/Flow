@@ -4,6 +4,7 @@ import axios from 'axios'
 import { Send, Sparkles, Bot, Lightbulb, MessageSquare, Zap, Shield, CheckCircle, TrendingUp, Users, Code, Loader } from 'lucide-react'
 import AiComponent from '../../components/AiComponent'
 import AiChatOutput from '../../components/AiChatOutput'
+import API_BASE_URL from '../../config/api'
 
 const AIPage = () => {
     const { projectId } = useParams()
@@ -57,7 +58,7 @@ const AIPage = () => {
         try {
             setLoadingMessages(true)
             const response = await axios.get(
-                `http://localhost:3000/api/ai-chat/project/${projectId}?userId=${currentUser.id}`
+                `${API_BASE_URL}/api/ai-chat/project/${projectId}?userId=${currentUser.id}`
             )
 
             if (response.data.success) {
@@ -103,7 +104,7 @@ const AIPage = () => {
     const fetchProjectData = async () => {
         try {
             setLoading(true)
-            const response = await axios.get(`http://localhost:3000/api/projects/${projectId}`)
+            const response = await axios.get(`${API_BASE_URL}/api/projects/${projectId}`)
             setProjectData(response.data.project || response.data)
         } catch (error) {
             console.error('Error fetching project data:', error)
@@ -142,7 +143,7 @@ const AIPage = () => {
 
         try {
             // Save AI response to database
-            const saveResponse = await axios.post('http://localhost:3000/api/ai-chat/message', {
+            const saveResponse = await axios.post(`${API_BASE_URL}/api/ai-chat/message`, {
                 projectId: parseInt(projectId),
                 userId: currentUser.id,
                 messageType: 'ai',
@@ -256,7 +257,7 @@ Make each recommendation practical and directly related to the project details p
 
             try {
                 // Save user message to database
-                await axios.post('http://localhost:3000/api/ai-chat/message', {
+                await axios.post(`${API_BASE_URL}/api/ai-chat/message`, {
                     projectId: parseInt(projectId),
                     userId: currentUser.id,
                     messageType: 'user',
