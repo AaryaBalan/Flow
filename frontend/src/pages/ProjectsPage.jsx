@@ -340,61 +340,61 @@ const ProjectsPage = () => {
     }
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
+        <div className="space-y-4 sm:space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-800 mb-2">Projects</h1>
-                    <p className="text-slate-600">Manage and track all your projects</p>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-1 sm:mb-2">Projects</h1>
+                    <p className="text-sm sm:text-base text-slate-600">Manage and track all your projects</p>
                 </div>
             </div>
 
             {/* Overall Work Stats Section */}
-            <div className="bg-linear-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200 shadow-sm">
-                <div className="flex items-center justify-between mb-4">
+            <div className="bg-linear-to-br from-blue-50 to-indigo-50 rounded-lg sm:rounded-xl p-4 sm:p-6 border border-blue-200 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
                     <div className="flex items-center gap-2">
-                        <TrendingUp className="w-6 h-6 text-blue-600" />
-                        <h2 className="text-xl font-bold text-slate-800">Today's Activity</h2>
+                        <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                        <h2 className="text-lg sm:text-xl font-bold text-slate-800">Today's Activity</h2>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${userActivity?.currentStatus === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    <span className={`px-2.5 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium self-start sm:self-auto ${userActivity?.currentStatus === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                         {userActivity?.currentStatus === 'active' ? '🟢 Working' : '🔴 On Break'}
                     </span>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-3 sm:mb-4">
                     {/* Work Time */}
-                    <div className="bg-white rounded-lg p-4 border border-blue-100">
-                        <div className="flex items-center gap-2 text-slate-600 mb-2">
-                            <Clock className="w-4 h-4" />
-                            <span className="text-sm font-medium">Work Time</span>
+                    <div className="bg-white rounded-lg p-3 sm:p-4 border border-blue-100">
+                        <div className="flex items-center gap-1.5 sm:gap-2 text-slate-600 mb-1.5 sm:mb-2">
+                            <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            <span className="text-xs sm:text-sm font-medium">Work Time</span>
                         </div>
-                        <p className="text-2xl font-bold text-slate-800">{formatWorkTime(userActivity?.workTimeToday || 0)}</p>
+                        <p className="text-lg sm:text-2xl font-bold text-slate-800">{formatWorkTime(userActivity?.workTimeToday || 0)}</p>
                     </div>
 
                     {/* Last Break */}
-                    <div className="bg-white rounded-lg p-4 border border-blue-100">
-                        <div className="flex items-center gap-2 text-slate-600 mb-2">
-                            <Coffee className="w-4 h-4" />
-                            <span className="text-sm font-medium">Last Break</span>
+                    <div className="bg-white rounded-lg p-3 sm:p-4 border border-blue-100">
+                        <div className="flex items-center gap-1.5 sm:gap-2 text-slate-600 mb-1.5 sm:mb-2">
+                            <Coffee className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            <span className="text-xs sm:text-sm font-medium">Last Break</span>
                         </div>
-                        <p className="text-lg font-semibold text-slate-800">{formatLastBreak(userActivity?.lastBreakTime)}</p>
+                        <p className="text-sm sm:text-lg font-semibold text-slate-800">{formatLastBreak(userActivity?.lastBreakTime)}</p>
                     </div>
 
                     {/* Tasks Completed */}
-                    <div className="bg-white rounded-lg p-4 border border-blue-100">
-                        <div className="flex items-center gap-2 text-slate-600 mb-2">
-                            <Target className="w-4 h-4" />
-                            <span className="text-sm font-medium">Tasks Done</span>
+                    <div className="bg-white rounded-lg p-3 sm:p-4 border border-blue-100">
+                        <div className="flex items-center gap-1.5 sm:gap-2 text-slate-600 mb-1.5 sm:mb-2">
+                            <Target className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            <span className="text-xs sm:text-sm font-medium">Tasks Done</span>
                         </div>
-                        <p className="text-2xl font-bold text-slate-800">{userActivity?.tasksCompletedToday || 0}</p>
+                        <p className="text-lg sm:text-2xl font-bold text-slate-800">{userActivity?.tasksCompletedToday || 0}</p>
                     </div>
 
                     {/* Active Projects */}
-                    <div className="bg-white rounded-lg p-4 border border-blue-100">
-                        <div className="flex items-center gap-2 text-slate-600 mb-2">
-                            <Users className="w-4 h-4" />
-                            <span className="text-sm font-medium">Active Projects</span>
+                    <div className="bg-white rounded-lg p-3 sm:p-4 border border-blue-100">
+                        <div className="flex items-center gap-1.5 sm:gap-2 text-slate-600 mb-1.5 sm:mb-2">
+                            <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            <span className="text-xs sm:text-sm font-medium">Active Projects</span>
                         </div>
-                        <p className="text-2xl font-bold text-slate-800">{userActivity?.activeProjects || 0}</p>
+                        <p className="text-lg sm:text-2xl font-bold text-slate-800">{userActivity?.activeProjects || 0}</p>
                     </div>
                 </div>
 
@@ -403,19 +403,19 @@ const ProjectsPage = () => {
                     const suggestion = getSuggestion(userActivity?.workTimeToday || 0, userActivity?.currentStatus === 'active')
                     const SuggestionIcon = suggestion.icon
                     return (
-                        <div className={`flex items-center justify-between p-4 rounded-lg border ${suggestion.color}`}>
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-white rounded-lg">
-                                    <SuggestionIcon className="w-5 h-5" />
+                        <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border ${suggestion.color}`}>
+                            <div className="flex items-center gap-2 sm:gap-3">
+                                <div className="p-1.5 sm:p-2 bg-white rounded-lg shrink-0">
+                                    <SuggestionIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                                 </div>
-                                <div>
-                                    <p className="font-bold text-sm">{suggestion.text}</p>
-                                    <p className="text-sm opacity-90">{suggestion.message}</p>
+                                <div className="min-w-0">
+                                    <p className="font-bold text-xs sm:text-sm">{suggestion.text}</p>
+                                    <p className="text-xs sm:text-sm opacity-90">{suggestion.message}</p>
                                 </div>
                             </div>
                             <button
                                 onClick={handleToggleBreak}
-                                className={`px-4 py-2 rounded-lg font-semibold text-sm hover:shadow-md transition-all ${userActivity?.currentStatus === 'active'
+                                className={`px-3 sm:px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm hover:shadow-md transition-all whitespace-nowrap ${userActivity?.currentStatus === 'active'
                                     ? 'bg-white hover:bg-red-50 text-red-700 border border-red-200'
                                     : 'bg-white hover:bg-green-50 text-green-700 border border-green-200'
                                     }`}
@@ -428,27 +428,27 @@ const ProjectsPage = () => {
             </div>
 
             {/* Projects Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {isLoading ? (
-                    <div className="col-span-full text-center py-12">
-                        <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                        <p className="text-slate-600">Loading projects...</p>
+                    <div className="col-span-full text-center py-8 sm:py-12">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3 sm:mb-4"></div>
+                        <p className="text-sm sm:text-base text-slate-600">Loading projects...</p>
                     </div>
                 ) : projects.length === 0 ? (
-                    <div className="col-span-full text-center py-12">
-                        <Users className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                        <h3 className="text-xl font-semibold text-slate-800 mb-2">No Projects Yet</h3>
-                        <p className="text-slate-600 mb-4">Create your first project or join an existing one</p>
-                        <div className="flex items-center justify-center gap-3">
+                    <div className="col-span-full text-center py-8 sm:py-12 px-4">
+                        <Users className="w-12 h-12 sm:w-16 sm:h-16 text-slate-300 mx-auto mb-3 sm:mb-4" />
+                        <h3 className="text-lg sm:text-xl font-semibold text-slate-800 mb-2">No Projects Yet</h3>
+                        <p className="text-sm sm:text-base text-slate-600 mb-4">Create your first project or join an existing one</p>
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 sm:gap-3">
                             <button
                                 onClick={() => setIsModalOpen(true)}
-                                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all"
+                                className="px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all"
                             >
                                 Create Project
                             </button>
                             <button
                                 onClick={() => setIsJoinModalOpen(true)}
-                                className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all"
+                                className="px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all"
                             >
                                 Join Project
                             </button>
@@ -459,10 +459,10 @@ const ProjectsPage = () => {
                         const isPending = project.invitationStatus === 'pending';
                         const ProjectWrapper = isPending ? 'div' : Link;
                         const wrapperProps = isPending
-                            ? { className: "bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden block opacity-75 cursor-not-allowed" }
+                            ? { className: "bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-100 overflow-hidden block opacity-75 cursor-not-allowed" }
                             : {
                                 to: `/project/${project.id}`,
-                                className: "bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-slate-100 overflow-hidden block"
+                                className: "bg-white rounded-lg sm:rounded-xl shadow-sm hover:shadow-md transition-all border border-slate-100 overflow-hidden block"
                             };
 
                         return (
@@ -472,26 +472,26 @@ const ProjectsPage = () => {
                             >
                                 {/* Pending Banner */}
                                 {isPending && (
-                                    <div className="bg-amber-100 border-b border-amber-200 px-4 py-2">
-                                        <p className="text-sm font-semibold text-amber-800 text-center">
+                                    <div className="bg-amber-100 border-b border-amber-200 px-3 sm:px-4 py-1.5 sm:py-2">
+                                        <p className="text-xs sm:text-sm font-semibold text-amber-800 text-center">
                                             Waiting for project owner approval
                                         </p>
                                     </div>
                                 )}
 
                                 {/* Project Header */}
-                                <div className="p-6 pb-4">
-                                    <div className="flex items-start gap-4 mb-4">
+                                <div className="p-3 sm:p-4 md:p-5 pb-3 sm:pb-4">
+                                    <div className="flex items-start gap-2.5 sm:gap-3 md:gap-4 mb-3 sm:mb-4">
                                         {/* Profile Image with First Letter */}
-                                        <div className={`w-14 h-14 rounded-xl ${isPending ? 'bg-linear-to-br from-amber-500 to-orange-500' : 'bg-linear-to-br from-blue-600 to-indigo-600'} flex items-center justify-center shrink-0 shadow-md`}>
-                                            <span className="text-2xl font-bold text-white">{getInitials(project.title)}</span>
+                                        <div className={`w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-lg sm:rounded-xl ${isPending ? 'bg-linear-to-br from-amber-500 to-orange-500' : 'bg-linear-to-br from-blue-600 to-indigo-600'} flex items-center justify-center shrink-0 shadow-sm sm:shadow-md`}>
+                                            <span className="text-lg sm:text-xl md:text-2xl font-bold text-white">{getInitials(project.title)}</span>
                                         </div>
 
                                         <div className="flex-1 min-w-0">
-                                            <div className="flex items-start justify-between gap-2 mb-2">
-                                                <h3 className="text-lg font-semibold text-slate-800 truncate">{project.title}</h3>
-                                                <div className="flex items-center gap-2">
-                                                    <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${isPending
+                                            <div className="flex items-start justify-between gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                                                <h3 className="text-base sm:text-lg font-semibold text-slate-800 truncate">{project.title}</h3>
+                                                <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                                                    <span className={`text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap ${isPending
                                                         ? 'bg-amber-100 text-amber-700 border border-amber-300'
                                                         : project.status === 'Active'
                                                             ? 'bg-green-100 text-green-700'
@@ -508,22 +508,22 @@ const ProjectsPage = () => {
                                                                     e.preventDefault()
                                                                     setOpenMenuId(openMenuId === project.id ? null : project.id)
                                                                 }}
-                                                                className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
+                                                                className="p-1 sm:p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
                                                             >
-                                                                <MoreVertical className="w-5 h-5 text-slate-600" />
+                                                                <MoreVertical className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600" />
                                                             </button>
 
                                                             {/* Dropdown Menu */}
                                                             {openMenuId === project.id && (
-                                                                <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-10 min-w-[150px]">
+                                                                <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-10 min-w-[120px] sm:min-w-[150px]">
                                                                     <button
                                                                         onClick={(e) => {
                                                                             e.preventDefault()
                                                                             handleEditProject(project)
                                                                         }}
-                                                                        className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                                                        className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-left text-xs sm:text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-1.5 sm:gap-2"
                                                                     >
-                                                                        <Edit className="w-4 h-4" />
+                                                                        <Edit className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                                                         Edit Project
                                                                     </button>
                                                                     <button
@@ -531,9 +531,9 @@ const ProjectsPage = () => {
                                                                             e.preventDefault()
                                                                             handleDeleteProject(project.id)
                                                                         }}
-                                                                        className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                                                        className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-left text-xs sm:text-sm text-red-600 hover:bg-red-50 flex items-center gap-1.5 sm:gap-2"
                                                                     >
-                                                                        <Trash2 className="w-4 h-4" />
+                                                                        <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                                                         Delete Project
                                                                     </button>
                                                                 </div>
@@ -542,42 +542,42 @@ const ProjectsPage = () => {
                                                     )}
                                                 </div>
                                             </div>
-                                            <p className="text-sm text-slate-600 line-clamp-2 mb-3">
+                                            <p className="text-xs sm:text-sm text-slate-600 line-clamp-2 mb-2 sm:mb-3">
                                                 {project.description}
                                             </p>
                                         </div>
                                     </div>
 
                                     {/* Author */}
-                                    <div className="mb-3">
-                                        <p className="text-sm text-slate-500">
+                                    <div className="mb-2 sm:mb-3">
+                                        <p className="text-xs sm:text-sm text-slate-500">
                                             <span className="font-medium text-slate-700">Author:</span> {project.authorName}
                                         </p>
                                     </div>
 
                                     {/* Join Code - Only show for project owner and approved members */}
                                     {!isPending && project.authorId == currentUser?.id ? (
-                                        <div className="mb-3 p-3 bg-green-50 rounded-lg">
+                                        <div className="mb-2 sm:mb-3 p-2.5 sm:p-3 bg-green-50 rounded-lg">
                                             <div className="flex items-center justify-between gap-2">
-                                                <div className="flex-1">
-                                                    <p className="text-xs text-slate-600 mb-1 font-medium">Join Code</p>
-                                                    <p className="text-lg font-bold text-green-600 font-mono">{project.joinCode}</p>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-[10px] sm:text-xs text-slate-600 mb-0.5 sm:mb-1 font-medium">Join Code</p>
+                                                    <p className="text-base sm:text-lg font-bold text-green-600 font-mono truncate">{project.joinCode}</p>
                                                 </div>
                                                 <button
                                                     onClick={(e) => {
                                                         e.preventDefault()
                                                         handleCopyCode(project.joinCode, `project-${project.id}`)
                                                     }}
-                                                    className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center gap-1 text-sm font-medium shrink-0"
+                                                    className="px-2.5 sm:px-3 py-1.5 sm:py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center gap-1 text-xs sm:text-sm font-medium shrink-0"
                                                 >
                                                     {copiedCodeId === `project-${project.id}` ? (
                                                         <>
-                                                            <Check className="w-4 h-4" />
+                                                            <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                                             <span className="hidden sm:inline">Copied</span>
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <Copy className="w-4 h-4" />
+                                                            <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                                             <span className="hidden sm:inline">Copy</span>
                                                         </>
                                                     )}
@@ -585,40 +585,40 @@ const ProjectsPage = () => {
                                             </div>
                                         </div>
                                     ) : !isPending && (
-                                        <div className="mb-3 py-4 px-3 bg-blue-50 rounded-lg">
-                                            <div className="flex items-center gap-3">
-                                                <div className="p-2 bg-white rounded-lg shadow-sm">
-                                                    <Users className="w-5 h-5 text-indigo-600" />
+                                        <div className="mb-2 sm:mb-3 py-3 sm:py-4 px-2.5 sm:px-3 bg-blue-50 rounded-lg">
+                                            <div className="flex items-center gap-2 sm:gap-3">
+                                                <div className="p-1.5 sm:p-2 bg-white rounded-lg shadow-sm shrink-0">
+                                                    <Users className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
                                                 </div>
-                                                <div className='flex flex-col gap-y-1.5'>
-                                                    <p className="text-xs text-blue-700 font-semibold">Team Member</p>
-                                                    <p className="text-sm text-slate-700 font-medium">Collaborating on this project</p>
+                                                <div className='flex flex-col gap-y-1 sm:gap-y-1.5 min-w-0'>
+                                                    <p className="text-[10px] sm:text-xs text-blue-700 font-semibold">Team Member</p>
+                                                    <p className="text-xs sm:text-sm text-slate-700 font-medium">Collaborating on this project</p>
                                                 </div>
                                             </div>
                                         </div>
                                     )}
 
                                     {/* Meta Info */}
-                                    <div className="flex items-center gap-4 mb-4 text-sm text-slate-600">
-                                        <div className="flex items-center gap-1.5">
-                                            <Users className="w-4 h-4" />
+                                    <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4 text-xs sm:text-sm text-slate-600">
+                                        <div className="flex items-center gap-1 sm:gap-1.5">
+                                            <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                             <span>{project.peopleJoined} joined</span>
                                         </div>
-                                        <div className="flex items-center gap-1.5">
-                                            <Calendar className="w-4 h-4" />
-                                            <span>{formatDate(project.createdAt)}</span>
+                                        <div className="flex items-center gap-1 sm:gap-1.5">
+                                            <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                            <span className="truncate">{formatDate(project.createdAt)}</span>
                                         </div>
                                     </div>
 
                                     {/* Progress */}
-                                    <div className="space-y-2">
-                                        <div className="flex items-center justify-between text-sm">
+                                    <div className="space-y-1.5 sm:space-y-2">
+                                        <div className="flex items-center justify-between text-xs sm:text-sm">
                                             <span className="text-slate-600 font-medium">Progress</span>
                                             <span className="font-semibold text-slate-800">{project.progress}%</span>
                                         </div>
-                                        <div className="w-full bg-slate-200 rounded-full h-2">
+                                        <div className="w-full bg-slate-200 rounded-full h-1.5 sm:h-2">
                                             <div
-                                                className={`${isPending ? 'bg-linear-to-r from-amber-500 to-orange-500' : 'bg-linear-to-r from-blue-600 to-indigo-600'} h-2 rounded-full transition-all`}
+                                                className={`${isPending ? 'bg-linear-to-r from-amber-500 to-orange-500' : 'bg-linear-to-r from-blue-600 to-indigo-600'} h-1.5 sm:h-2 rounded-full transition-all`}
                                                 style={{ width: `${project.progress}%` }}
                                             />
                                         </div>
@@ -631,90 +631,90 @@ const ProjectsPage = () => {
             </div>
 
             {/* Floating Action Buttons */}
-            <div className="fixed bottom-8 right-8 flex items-center gap-4">
+            <div className="fixed bottom-6 sm:bottom-8 right-6 sm:right-8 flex items-center gap-3 sm:gap-4">
                 {/* Join Button */}
                 <button
                     onClick={() => setIsJoinModalOpen(true)}
-                    className="w-16 h-16 bg-linear-to-br from-green-600 to-emerald-600 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center group"
+                    className="w-14 h-14 sm:w-16 sm:h-16 bg-linear-to-br from-green-600 to-emerald-600 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center group"
                     aria-label="Join a project"
                 >
-                    <UserPlus className="w-8 h-8 group-hover:scale-110 transition-transform" />
+                    <UserPlus className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 group-hover:scale-110 transition-transform" />
                 </button>
 
                 {/* Add Button */}
                 <button
                     onClick={() => setIsModalOpen(true)}
-                    className="w-16 h-16 bg-linear-to-br from-blue-600 to-indigo-600 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center group"
+                    className="w-14 h-14 sm:w-16 sm:h-16 bg-linear-to-br from-blue-600 to-indigo-600 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center group"
                     aria-label="Add new project"
                 >
-                    <Plus className="w-8 h-8 group-hover:rotate-90 transition-transform" />
+                    <Plus className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 group-hover:rotate-90 transition-transform" />
                 </button>
             </div>
 
             {/* Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
+                    <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                         {/* Modal Header */}
-                        <div className="flex items-center justify-between p-6 border-b border-slate-200">
-                            <div>
-                                <h2 className="text-2xl font-bold text-slate-800">
+                        <div className="flex items-start sm:items-center justify-between p-4 sm:p-6 border-b border-slate-200 gap-3">
+                            <div className="min-w-0 flex-1">
+                                <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-slate-800">
                                     {isEditMode ? 'Edit Project' : 'Create New Project'}
                                 </h2>
-                                <p className="text-sm text-slate-600 mt-1">
+                                <p className="text-xs sm:text-sm text-slate-600 mt-0.5 sm:mt-1">
                                     {isEditMode ? 'Update your project details' : 'Fill in the details to start a new project'}
                                 </p>
                             </div>
                             <button
                                 onClick={handleCloseModal}
-                                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                                className="p-1.5 sm:p-2 hover:bg-slate-100 rounded-lg transition-colors shrink-0"
                                 aria-label="Close modal"
                             >
-                                <X className="w-6 h-6 text-slate-600" />
+                                <X className="w-5 h-5 sm:w-6 sm:h-6 text-slate-600" />
                             </button>
                         </div>
 
                         {/* Modal Body */}
-                        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                             {/* Join Code Field (Read-only) - Only show when creating */}
                             {!isEditMode && (
                                 <div>
-                                    <label htmlFor="joinCode" className="block text-sm font-semibold text-slate-700 mb-2">
+                                    <label htmlFor="joinCode" className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 sm:mb-2">
                                         Join Code
                                     </label>
-                                    <div className="flex gap-2">
+                                    <div className="flex flex-col sm:flex-row gap-2">
                                         <input
                                             type="text"
                                             id="joinCode"
                                             value={joinCode}
                                             readOnly
-                                            className="flex-1 px-4 py-3 border border-slate-300 rounded-lg bg-slate-50 text-slate-700 font-mono text-lg font-semibold cursor-not-allowed"
+                                            className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 border border-slate-300 rounded-lg bg-slate-50 text-slate-700 font-mono text-base sm:text-lg font-semibold cursor-not-allowed"
                                         />
                                         <button
                                             type="button"
                                             onClick={() => handleCopyCode(joinCode, 'modal')}
-                                            className="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2 font-medium"
+                                            className="px-3 sm:px-4 py-2.5 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2 font-medium text-sm sm:text-base whitespace-nowrap"
                                         >
                                             {copiedCodeId === 'modal' ? (
                                                 <>
-                                                    <Check className="w-5 h-5" />
+                                                    <Check className="w-4 h-4 sm:w-5 sm:h-5" />
                                                     <span>Copied!</span>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <Copy className="w-5 h-5" />
+                                                    <Copy className="w-4 h-4 sm:w-5 sm:h-5" />
                                                     <span>Copy</span>
                                                 </>
                                             )}
                                         </button>
                                     </div>
-                                    <p className="text-xs text-slate-500 mt-2">Share this code with others to let them join your project</p>
+                                    <p className="text-[10px] sm:text-xs text-slate-500 mt-1.5 sm:mt-2">Share this code with others to let them join your project</p>
                                 </div>
                             )}
 
                             {/* Title Field */}
                             <div>
-                                <label htmlFor="title" className="block text-sm font-semibold text-slate-700 mb-2">
+                                <label htmlFor="title" className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 sm:mb-2">
                                     Project Title *
                                 </label>
                                 <input
@@ -725,13 +725,13 @@ const ProjectsPage = () => {
                                     onChange={handleInputChange}
                                     required
                                     placeholder="Enter project title"
-                                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                                 />
                             </div>
 
                             {/* Description Field */}
                             <div>
-                                <label htmlFor="description" className="block text-sm font-semibold text-slate-700 mb-2">
+                                <label htmlFor="description" className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 sm:mb-2">
                                     Description *
                                 </label>
                                 <textarea
@@ -742,13 +742,13 @@ const ProjectsPage = () => {
                                     required
                                     rows="4"
                                     placeholder="Describe your project..."
-                                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+                                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
                                 />
                             </div>
 
                             {/* Author Field */}
                             <div>
-                                <label htmlFor="author" className="block text-sm font-semibold text-slate-700 mb-2">
+                                <label htmlFor="author" className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 sm:mb-2">
                                     Author Name
                                 </label>
                                 <input
@@ -757,25 +757,25 @@ const ProjectsPage = () => {
                                     name="author"
                                     value={currentUser?.name?.toUpperCase() || currentUser?.email?.split('@')[0] || 'User'}
                                     readOnly
-                                    className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-slate-50 text-slate-700 font-semibold cursor-not-allowed"
+                                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 rounded-lg bg-slate-50 text-slate-700 font-semibold cursor-not-allowed"
                                 />
-                                <p className="text-xs text-slate-500 mt-2">You will be set as the project author</p>
+                                <p className="text-[10px] sm:text-xs text-slate-500 mt-1.5 sm:mt-2">You will be set as the project author</p>
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex items-center gap-3 pt-4">
-                                <button
-                                    type="submit"
-                                    className="flex-1 px-6 py-3 bg-linear-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all"
-                                >
-                                    {isEditMode ? 'Update Project' : 'Create Project'}
-                                </button>
+                            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 pt-3 sm:pt-4">
                                 <button
                                     type="button"
                                     onClick={handleCloseModal}
-                                    className="px-6 py-3 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors"
+                                    className="px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors"
                                 >
                                     Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="flex-1 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base bg-linear-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all"
+                                >
+                                    {isEditMode ? 'Update Project' : 'Create Project'}
                                 </button>
                             </div>
                         </form>
@@ -785,31 +785,31 @@ const ProjectsPage = () => {
 
             {/* Join Project Modal */}
             {isJoinModalOpen && (
-                <div className="fixed inset-0 backdrop-blur-sm bg-white/30 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+                <div className="fixed inset-0 backdrop-blur-sm bg-white/30 z-50 flex items-center justify-center p-3 sm:p-4">
+                    <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl max-w-md w-full">
                         {/* Modal Header */}
-                        <div className="flex items-center justify-between p-6 border-b border-slate-200">
-                            <div>
-                                <h2 className="text-2xl font-bold text-slate-800">Join a Project</h2>
-                                <p className="text-sm text-slate-600 mt-1">Enter the project join code</p>
+                        <div className="flex items-start sm:items-center justify-between p-4 sm:p-6 border-b border-slate-200 gap-3">
+                            <div className="min-w-0 flex-1">
+                                <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-slate-800">Join a Project</h2>
+                                <p className="text-xs sm:text-sm text-slate-600 mt-0.5 sm:mt-1">Enter the project join code</p>
                             </div>
                             <button
                                 onClick={() => {
                                     setIsJoinModalOpen(false)
                                     setJoinCodeInput('')
                                 }}
-                                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                                className="p-1.5 sm:p-2 hover:bg-slate-100 rounded-lg transition-colors shrink-0"
                                 aria-label="Close modal"
                             >
-                                <X className="w-6 h-6 text-slate-600" />
+                                <X className="w-5 h-5 sm:w-6 sm:h-6 text-slate-600" />
                             </button>
                         </div>
 
                         {/* Modal Body */}
-                        <form onSubmit={handleJoinProject} className="p-6 space-y-6">
+                        <form onSubmit={handleJoinProject} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                             {/* Join Code Input */}
                             <div>
-                                <label htmlFor="joinCodeInput" className="block text-sm font-semibold text-slate-700 mb-2">
+                                <label htmlFor="joinCodeInput" className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 sm:mb-2">
                                     Enter Join Code *
                                 </label>
                                 <input
@@ -819,28 +819,28 @@ const ProjectsPage = () => {
                                     onChange={(e) => setJoinCodeInput(e.target.value)}
                                     placeholder="Enter 6-digit code"
                                     maxLength={6}
-                                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all font-mono text-lg text-center tracking-wider"
+                                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all font-mono text-base sm:text-lg text-center tracking-wider"
                                 />
-                                <p className="text-xs text-slate-500 mt-2">Ask the project owner for the join code</p>
+                                <p className="text-[10px] sm:text-xs text-slate-500 mt-1.5 sm:mt-2">Ask the project owner for the join code</p>
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex items-center gap-3">
-                                <button
-                                    type="submit"
-                                    className="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all shadow-sm hover:shadow-md"
-                                >
-                                    Join Project
-                                </button>
+                            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                                 <button
                                     type="button"
                                     onClick={() => {
                                         setIsJoinModalOpen(false)
                                         setJoinCodeInput('')
                                     }}
-                                    className="px-6 py-3 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors"
+                                    className="px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors"
                                 >
                                     Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="flex-1 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all shadow-sm hover:shadow-md"
+                                >
+                                    Join Project
                                 </button>
                             </div>
                         </form>

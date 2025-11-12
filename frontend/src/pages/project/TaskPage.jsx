@@ -191,35 +191,35 @@ const TaskPage = () => {
 
     return (
         <>
-            <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h2 className="text-3xl font-bold text-slate-800">Tasks</h2>
-                        <p className="text-slate-600 mt-1 flex items-center gap-2">
+            <div className="space-y-4 sm:space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                    <div className="min-w-0">
+                        <h2 className="text-2xl sm:text-3xl font-bold text-slate-800">Tasks</h2>
+                        <p className="text-sm sm:text-base text-slate-600 mt-0.5 sm:mt-1 flex items-center gap-2">
                             {isLoading ? 'Loading...' : `${tasks.length} total tasks`}
                             {isRefreshing && (
-                                <span className="flex items-center gap-1 text-xs text-blue-600">
-                                    <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                                <span className="flex items-center gap-1 text-[10px] sm:text-xs text-blue-600">
+                                    <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                                     Syncing...
                                 </span>
                             )}
                         </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                         <button
                             onClick={() => fetchTasks(false)}
                             disabled={isRefreshing}
-                            className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 text-sm sm:text-base bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Refresh tasks"
                         >
-                            <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                            <RefreshCw className={`w-4 h-4 sm:w-5 sm:h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
                             <span className="hidden sm:inline">Refresh</span>
                         </button>
                         <button
                             onClick={() => setIsModalOpen(true)}
-                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 text-sm sm:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
                         >
-                            <Plus className="w-5 h-5" />
+                            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
                             <span className="hidden sm:inline">Add Task</span>
                             <span className="sm:hidden">Add</span>
                         </button>
@@ -227,22 +227,22 @@ const TaskPage = () => {
                 </div>
 
                 {isLoading ? (
-                    <div className="text-center py-12">
-                        <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                        <p className="text-slate-600">Loading tasks...</p>
+                    <div className="text-center py-8 sm:py-12">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3 sm:mb-4"></div>
+                        <p className="text-sm sm:text-base text-slate-600">Loading tasks...</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-start">
                         {/* Pending Tasks */}
-                        <div className="bg-white rounded-xl shadow-sm p-6">
-                            <h3 className="text-lg font-semibold text-slate-800 mb-4">
+                        <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-4 sm:p-6">
+                            <h3 className="text-base sm:text-lg font-semibold text-slate-800 mb-3 sm:mb-4">
                                 Pending Tasks ({tasks.filter(task => !task.completed).length})
                             </h3>
-                            <div className="space-y-3 min-h-[100px]">
+                            <div className="space-y-2.5 sm:space-y-3 min-h-[100px]">
                                 {tasks.filter(task => !task.completed).length === 0 ? (
-                                    <div className="text-center py-8 text-slate-400">
-                                        <CheckCircle className="w-12 h-12 mx-auto mb-2 opacity-30" />
-                                        <p>No pending tasks</p>
+                                    <div className="text-center py-6 sm:py-8 text-slate-400">
+                                        <CheckCircle className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 opacity-30" />
+                                        <p className="text-sm sm:text-base">No pending tasks</p>
                                     </div>
                                 ) : (
                                     tasks.filter(task => !task.completed).map(task => {
@@ -250,32 +250,32 @@ const TaskPage = () => {
                                         return (
                                             <div
                                                 key={task.id}
-                                                className="p-4 rounded-lg border border-slate-200 hover:border-blue-300 hover:bg-slate-50 transition-all"
+                                                className="p-3 sm:p-4 rounded-lg border border-slate-200 hover:border-blue-300 hover:bg-slate-50 transition-all"
                                             >
-                                                <div className="flex items-start gap-3">
+                                                <div className="flex items-start gap-2 sm:gap-3">
                                                     <div
-                                                        className={`mt-0.5 ${isRestricted ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                                                        className={`mt-0.5 shrink-0 ${isRestricted ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                                                         onClick={() => toggleTask(task.id, task)}
                                                         title={isRestricted ? 'Only author can complete this task' : 'Click to mark as complete'}
                                                     >
-                                                        <Circle className={`w-5 h-5 ${isRestricted ? 'text-slate-300' : 'text-slate-400 hover:text-blue-600'}`} />
+                                                        <Circle className={`w-4 h-4 sm:w-5 sm:h-5 ${isRestricted ? 'text-slate-300' : 'text-slate-400 hover:text-blue-600'}`} />
                                                     </div>
-                                                    <div className="flex-1">
-                                                        <div className="flex items-start justify-between gap-2 mb-2">
-                                                            <div className="flex-1">
-                                                                <p className="text-slate-700 font-medium">{task.title}</p>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-start justify-between gap-2 mb-1.5 sm:mb-2">
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-sm sm:text-base text-slate-700 font-medium break-words">{task.title}</p>
                                                                 {task.description && (
-                                                                    <p className="text-slate-500 text-sm mt-1">{task.description}</p>
+                                                                    <p className="text-xs sm:text-sm text-slate-500 mt-1 break-words">{task.description}</p>
                                                                 )}
                                                             </div>
-                                                            <div className="flex items-center gap-1">
+                                                            <div className="flex items-center gap-1 shrink-0">
                                                                 {task.onlyAuthorCanComplete ? (
                                                                     <div
-                                                                        className="flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-700 rounded text-xs font-medium"
+                                                                        className="flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-amber-100 text-amber-700 rounded text-[10px] sm:text-xs font-medium whitespace-nowrap"
                                                                         title={isRestricted ? "You cannot complete this task - Only author can" : "Only you can complete this task"}
                                                                     >
-                                                                        <Lock className="w-3 h-3" />
-                                                                        {isRestricted && <span className="ml-1">Restricted</span>}
+                                                                        <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                                                                        {isRestricted && <span className="ml-0.5 sm:ml-1 hidden xs:inline">Restricted</span>}
                                                                     </div>
                                                                 ) : (
                                                                     ""
@@ -286,16 +286,18 @@ const TaskPage = () => {
                                                                         className="p-1 hover:bg-red-100 rounded text-red-600 transition-colors"
                                                                         title="Delete task"
                                                                     >
-                                                                        <Trash2 className="w-4 h-4" />
+                                                                        <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                                                     </button>
                                                                 )}
                                                             </div>
                                                         </div>
-                                                        <div className="flex items-center gap-2 text-xs text-slate-500">
-                                                            <User className="w-3 h-3" />
-                                                            <span>Created by <span className="font-medium">{task.taskAuthor}</span></span>
-                                                            <span>•</span>
-                                                            <span>{formatDate(task.createdAt)}</span>
+                                                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-slate-500">
+                                                            <div className="flex items-center gap-1">
+                                                                <User className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                                                                <span>Created by <span className="font-medium">{task.taskAuthor}</span></span>
+                                                            </div>
+                                                            <span className="hidden sm:inline">•</span>
+                                                            <span className="truncate">{formatDate(task.createdAt)}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -307,15 +309,15 @@ const TaskPage = () => {
                         </div>
 
                         {/* Completed Tasks */}
-                        <div className="bg-white rounded-xl shadow-sm p-6">
-                            <h3 className="text-lg font-semibold text-slate-800 mb-4">
+                        <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-4 sm:p-6">
+                            <h3 className="text-base sm:text-lg font-semibold text-slate-800 mb-3 sm:mb-4">
                                 Completed Tasks ({tasks.filter(task => task.completed).length})
                             </h3>
-                            <div className="space-y-3 min-h-[100px]">
+                            <div className="space-y-2.5 sm:space-y-3 min-h-[100px]">
                                 {tasks.filter(task => task.completed).length === 0 ? (
-                                    <div className="text-center py-8 text-slate-400">
-                                        <Circle className="w-12 h-12 mx-auto mb-2 opacity-30" />
-                                        <p>No completed tasks</p>
+                                    <div className="text-center py-6 sm:py-8 text-slate-400">
+                                        <Circle className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 opacity-30" />
+                                        <p className="text-sm sm:text-base">No completed tasks</p>
                                     </div>
                                 ) : (
                                     tasks.filter(task => task.completed).map(task => {
@@ -323,32 +325,32 @@ const TaskPage = () => {
                                         return (
                                             <div
                                                 key={task.id}
-                                                className="p-4 rounded-lg border border-slate-200 hover:border-green-300 hover:bg-slate-50 transition-all"
+                                                className="p-3 sm:p-4 rounded-lg border border-slate-200 hover:border-green-300 hover:bg-slate-50 transition-all"
                                             >
-                                                <div className="flex items-start gap-3">
+                                                <div className="flex items-start gap-2 sm:gap-3">
                                                     <div
-                                                        className={`mt-0.5 ${isRestricted ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                                                        className={`mt-0.5 shrink-0 ${isRestricted ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                                                         onClick={() => toggleTask(task.id, task)}
                                                         title={isRestricted ? '🔒 Only author can modify this task' : 'Click to mark as incomplete'}
                                                     >
-                                                        <CheckCircle className={`w-5 h-5 ${isRestricted ? 'text-green-400' : 'text-green-600 hover:text-green-700'}`} />
+                                                        <CheckCircle className={`w-4 h-4 sm:w-5 sm:h-5 ${isRestricted ? 'text-green-400' : 'text-green-600 hover:text-green-700'}`} />
                                                     </div>
-                                                    <div className="flex-1">
-                                                        <div className="flex items-start justify-between gap-2 mb-2">
-                                                            <div className="flex-1">
-                                                                <p className="text-slate-500 line-through font-medium">{task.title}</p>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-start justify-between gap-2 mb-1.5 sm:mb-2">
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-sm sm:text-base text-slate-500 line-through font-medium break-words">{task.title}</p>
                                                                 {task.description && (
-                                                                    <p className="text-slate-400 text-sm mt-1 line-through">{task.description}</p>
+                                                                    <p className="text-xs sm:text-sm text-slate-400 mt-1 line-through break-words">{task.description}</p>
                                                                 )}
                                                             </div>
-                                                            <div className="flex items-center gap-1">
+                                                            <div className="flex items-center gap-1 shrink-0">
                                                                 {task.onlyAuthorCanComplete ? (
                                                                     <div
-                                                                        className="flex items-center gap-1 px-2 py-1  bg-amber-100 text-amber-700 rounded text-xs font-medium"
+                                                                        className="flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-amber-100 text-amber-700 rounded text-[10px] sm:text-xs font-medium whitespace-nowrap"
                                                                         title={isRestricted ? "Restricted - Only author can modify" : "Author-only task"}
                                                                     >
-                                                                        <Lock className="w-3 h-3" />
-                                                                        {isRestricted && <span className="ml-1">Restricted</span>}
+                                                                        <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                                                                        {isRestricted && <span className="ml-0.5 sm:ml-1 hidden xs:inline">Restricted</span>}
                                                                     </div>
                                                                 ) : (
                                                                     ""
@@ -359,23 +361,27 @@ const TaskPage = () => {
                                                                         className="p-1 hover:bg-red-100 rounded text-red-600 transition-colors"
                                                                         title="Delete task"
                                                                     >
-                                                                        <Trash2 className="w-4 h-4" />
+                                                                        <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                                                     </button>
                                                                 )}
                                                             </div>
                                                         </div>
-                                                        <div className="space-y-1">
-                                                            <div className="flex items-center gap-2 text-xs text-slate-500">
-                                                                <User className="w-3 h-3" />
-                                                                <span>Created by <span className="font-medium">{task.taskAuthor}</span></span>
-                                                                <span>•</span>
-                                                                <span>{formatDate(task.createdAt)}</span>
+                                                        <div className="space-y-0.5 sm:space-y-1">
+                                                            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-slate-500">
+                                                                <div className="flex items-center gap-1">
+                                                                    <User className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                                                                    <span>Created by <span className="font-medium">{task.taskAuthor}</span></span>
+                                                                </div>
+                                                                <span className="hidden sm:inline">•</span>
+                                                                <span className="truncate">{formatDate(task.createdAt)}</span>
                                                             </div>
-                                                            <div className="flex items-center gap-2 text-xs text-green-600">
-                                                                <CheckCircle className="w-3 h-3" />
-                                                                <span>Completed by <span className="font-medium">{task.completedBy}</span></span>
-                                                                <span>•</span>
-                                                                <span>{formatDate(task.completionDate)}</span>
+                                                            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-green-600">
+                                                                <div className="flex items-center gap-1">
+                                                                    <CheckCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                                                                    <span>Completed by <span className="font-medium">{task.completedBy}</span></span>
+                                                                </div>
+                                                                <span className="hidden sm:inline">•</span>
+                                                                <span className="truncate">{formatDate(task.completionDate)}</span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -391,28 +397,28 @@ const TaskPage = () => {
 
                 {/* Add Task Modal */}
                 {isModalOpen && (
-                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                        <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full">
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
+                        <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl max-w-xl w-full">
                             {/* Modal Header */}
-                            <div className="flex items-center justify-between p-6 border-b border-slate-200">
-                                <div>
-                                    <h2 className="text-2xl font-bold text-slate-800">Add New Task</h2>
-                                    <p className="text-sm text-slate-600 mt-1">Create a new task for the project</p>
+                            <div className="flex items-start sm:items-center justify-between p-4 sm:p-6 border-b border-slate-200 gap-3">
+                                <div className="min-w-0 flex-1">
+                                    <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-slate-800">Add New Task</h2>
+                                    <p className="text-xs sm:text-sm text-slate-600 mt-0.5 sm:mt-1">Create a new task for the project</p>
                                 </div>
                                 <button
                                     onClick={() => setIsModalOpen(false)}
-                                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                                    className="p-1.5 sm:p-2 hover:bg-slate-100 rounded-lg transition-colors shrink-0"
                                     aria-label="Close modal"
                                 >
-                                    <X className="w-6 h-6 text-slate-600" />
+                                    <X className="w-5 h-5 sm:w-6 sm:h-6 text-slate-600" />
                                 </button>
                             </div>
 
                             {/* Modal Body */}
-                            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                            <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-3 sm:space-y-4">
                                 {/* Task Title Field */}
                                 <div>
-                                    <label htmlFor="title" className="block text-sm font-semibold text-slate-700 mb-2">
+                                    <label htmlFor="title" className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 sm:mb-2">
                                         Task Title *
                                     </label>
                                     <input
@@ -423,13 +429,13 @@ const TaskPage = () => {
                                         onChange={handleInputChange}
                                         required
                                         placeholder="Enter task title"
-                                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                                     />
                                 </div>
 
                                 {/* Task Description Field */}
                                 <div>
-                                    <label htmlFor="description" className="block text-sm font-semibold text-slate-700 mb-2">
+                                    <label htmlFor="description" className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 sm:mb-2">
                                         Description
                                     </label>
                                     <textarea
@@ -439,13 +445,13 @@ const TaskPage = () => {
                                         onChange={handleInputChange}
                                         placeholder="Enter task description (optional)"
                                         rows="3"
-                                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+                                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
                                     />
                                 </div>
 
                                 {/* Author Field (Read-only) */}
                                 <div>
-                                    <label htmlFor="author" className="block text-sm font-semibold text-slate-700 mb-2">
+                                    <label htmlFor="author" className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 sm:mb-2">
                                         Author
                                     </label>
                                     <input
@@ -453,20 +459,20 @@ const TaskPage = () => {
                                         id="author"
                                         value={currentUser?.name?.toUpperCase() || currentUser?.email?.split('@')[0]?.toUpperCase() || 'USER'}
                                         readOnly
-                                        className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-slate-50 text-slate-700 font-semibold cursor-not-allowed"
+                                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 rounded-lg bg-slate-50 text-slate-700 font-semibold cursor-not-allowed"
                                     />
-                                    <p className="text-xs text-slate-500 mt-2">You will be set as the task author</p>
+                                    <p className="text-[10px] sm:text-xs text-slate-500 mt-1.5 sm:mt-2">You will be set as the task author</p>
                                 </div>
 
                                 {/* Only Author Can Complete Toggle */}
-                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                    <div className="flex items-center justify-between gap-4">
-                                        <div className="flex-1">
-                                            <label htmlFor="onlyAuthorCanComplete" className="text-sm font-semibold text-slate-800 flex items-center gap-2">
-                                                <Lock className="w-4 h-4 text-blue-600" />
-                                                Only I Can Complete This Task
+                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+                                    <div className="flex items-start sm:items-center justify-between gap-3 sm:gap-4">
+                                        <div className="flex-1 min-w-0">
+                                            <label htmlFor="onlyAuthorCanComplete" className="text-xs sm:text-sm font-semibold text-slate-800 flex items-center gap-1.5 sm:gap-2">
+                                                <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 shrink-0" />
+                                                <span>Only I Can Complete This Task</span>
                                             </label>
-                                            <p className="text-xs text-slate-600 mt-1">
+                                            <p className="text-[10px] sm:text-xs text-slate-600 mt-0.5 sm:mt-1">
                                                 When enabled, only you can mark this task as complete or incomplete. Other team members can view it but cannot modify its status.
                                             </p>
                                         </div>
@@ -474,14 +480,14 @@ const TaskPage = () => {
                                         <button
                                             type="button"
                                             onClick={() => setFormData(prev => ({ ...prev, onlyAuthorCanComplete: !prev.onlyAuthorCanComplete }))}
-                                            className={`outline-none relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${formData.onlyAuthorCanComplete ? 'bg-blue-600' : 'bg-slate-300'
+                                            className={`shrink-0 outline-none relative inline-flex h-5 w-10 sm:h-6 sm:w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${formData.onlyAuthorCanComplete ? 'bg-blue-600' : 'bg-slate-300'
                                                 }`}
                                             role="switch"
                                             aria-checked={formData.onlyAuthorCanComplete}
                                             aria-labelledby="onlyAuthorCanComplete"
                                         >
                                             <span
-                                                className={`outline-none inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.onlyAuthorCanComplete ? 'translate-x-6' : 'translate-x-1'
+                                                className={`outline-none inline-block h-3.5 w-3.5 sm:h-4 sm:w-4 transform rounded-full bg-white transition-transform ${formData.onlyAuthorCanComplete ? 'translate-x-5 sm:translate-x-6' : 'translate-x-1'
                                                     }`}
                                             />
                                         </button>
@@ -489,19 +495,19 @@ const TaskPage = () => {
                                 </div>
 
                                 {/* Action Buttons */}
-                                <div className="flex items-center gap-3 pt-4">
-                                    <button
-                                        type="submit"
-                                        className="flex-1 px-6 py-3 bg-linear-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all"
-                                    >
-                                        Create Task
-                                    </button>
+                                <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 pt-3 sm:pt-4">
                                     <button
                                         type="button"
                                         onClick={() => setIsModalOpen(false)}
-                                        className="px-6 py-3 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors"
+                                        className="px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors"
                                     >
                                         Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="flex-1 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base bg-linear-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all"
+                                    >
+                                        Create Task
                                     </button>
                                 </div>
                             </form>

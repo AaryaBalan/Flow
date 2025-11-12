@@ -126,7 +126,7 @@ const AiChatOutput = ({ messages }) => {
                         </div>
                     )}
 
-                    <div className={`max-w-[75%] ${msg.type === 'user' ? 'flex flex-col items-end' : ''}`}>
+                    <div className={`max-w-full md:max-w-[75%] ${msg.type === 'user' ? 'flex flex-col items-end' : ''}`}>
                         {/* User name for user messages */}
                         {msg.type === 'user' && msg.userName && (
                             <div className="text-xs text-slate-600 mb-1 px-2 font-medium">
@@ -135,7 +135,7 @@ const AiChatOutput = ({ messages }) => {
                         )}
 
                         <div
-                            className={`rounded-2xl px-4 py-2.5 ${msg.type === 'ai'
+                            className={`rounded-md px-4 py-2.5 ${msg.type === 'ai'
                                 ? 'bg-white border border-slate-200'
                                 : 'bg-purple-600 text-white'
                                 }`}
@@ -150,7 +150,7 @@ const AiChatOutput = ({ messages }) => {
                                         </div>
                                     ) : (
                                         <>
-                                            {formatMessage(msg.text)}
+                                            <p className='text-xs md:text-sm'>{formatMessage(msg.text)}</p>
                                             <button
                                                 onClick={() => copyToClipboard(msg.text, msg.id)}
                                                 className="absolute -top-1 -right-1 p-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
@@ -166,7 +166,7 @@ const AiChatOutput = ({ messages }) => {
                                     )}
                                 </div>
                             ) : (
-                                <p className="text-white leading-relaxed">{msg.text}</p>
+                                <p className="text-white leading-relaxed text-xs md:text-sm">{msg.text}</p>
                             )}
 
                             {/* Timestamp */}
