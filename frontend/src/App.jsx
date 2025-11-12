@@ -13,6 +13,8 @@ import ProjectAIPage from './pages/project/AIPage';
 import ChatPage from './pages/project/ChatPage';
 import PeoplePage from './pages/project/PeoplePage';
 import StatsPage from './pages/project/StatsPage';
+import NotesPage from './pages/project/NotesPage';
+import NoteDetailPage from './pages/project/NoteDetailPage';
 import AiComponent from './components/AiComponent';
 
 function AppContent() {
@@ -76,12 +78,14 @@ function AppContent() {
         <Route path="ai" element={<AIPage />} />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="profile/:userId" element={<ProfilePage />} />
-        <Route path="/abc" element={<AiComponent userInput={'hello'}/>} />
+        <Route path="/abc" element={<AiComponent userInput={'hello'} />} />
 
       </Route>
       <Route path="/project/:projectId" element={<SingleProjectPage />}>
         <Route index element={<Navigate to="task" replace />} />
         <Route path="task" element={<TaskPage />} />
+        <Route path="notes" element={<NotesPage />} />
+        <Route path="notes/:noteId" element={<NoteDetailPage />} />
         <Route path="ai" element={<ProjectAIPage />} />
         <Route path="chat" element={<ChatPage />} />
         <Route path="peoples" element={<PeoplePage />} />

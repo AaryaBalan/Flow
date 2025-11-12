@@ -8,7 +8,8 @@ import {
     MessageSquare,
     Users,
     BarChart3,
-    ArrowLeft
+    ArrowLeft,
+    FileText
 } from 'lucide-react'
 import axios from 'axios'
 
@@ -82,6 +83,7 @@ const SingleProjectPage = () => {
 
     const rightNavItems = [
         { id: 'task', name: 'Task', icon: CheckSquare, path: `/project/${projectId}/task` },
+        { id: 'notes', name: 'Notes', icon: FileText, path: `/project/${projectId}/notes` },
         { id: 'ai', name: 'AI', icon: Sparkles, path: `/project/${projectId}/ai` },
         { id: 'chat', name: 'Chat', icon: MessageSquare, path: `/project/${projectId}/chat` },
         { id: 'peoples', name: 'Peoples', icon: Users, path: `/project/${projectId}/peoples` },

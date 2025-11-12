@@ -1,0 +1,149 @@
+/* Custom Quill Editor Styles */
+
+/* Make links blue and underlined in both editor and display */
+.ql-editor a,
+.ql-editor a:visited {
+    color: #2563eb !important;
+    text-decoration: underline !important;
+    cursor: pointer;
+}
+
+.ql-editor a:hover {
+    color: #1d4ed8 !important;
+    text-decoration: underline !important;
+}
+
+/* Ensure bold text is actually bold */
+.ql-editor strong,
+.ql-editor b {
+    font-weight: 700 !important;
+}
+
+/* Ensure italic text is actually italic */
+.ql-editor em,
+.ql-editor i {
+    font-style: italic !important;
+}
+
+/* Ensure underline works */
+.ql-editor u {
+    text-decoration: underline !important;
+}
+
+/* Strikethrough */
+.ql-editor s {
+    text-decoration: line-through !important;
+}
+
+/* Lists */
+.ql-editor ul,
+.ql-editor ol {
+    padding-left: 1.5rem !important;
+    margin: 1rem 0 !important;
+}
+
+.ql-editor ul li,
+.ql-editor ol li {
+    margin: 0.5rem 0 !important;
+}
+
+/* Headers */
+.ql-editor h1 {
+    font-size: 2rem !important;
+    font-weight: 700 !important;
+    margin: 1rem 0 !important;
+}
+
+.ql-editor h2 {
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    margin: 0.875rem 0 !important;
+}
+
+.ql-editor h3 {
+    font-size: 1.25rem !important;
+    font-weight: 600 !important;
+    margin: 0.75rem 0 !important;
+}
+
+/* Ensure proper spacing */
+.ql-editor p {
+    margin: 0.5rem 0 !important;
+}
+
+/* Code blocks */
+.ql-editor pre {
+    background-color: #f3f4f6 !important;
+    padding: 1rem !important;
+    border-radius: 0.5rem !important;
+    overflow-x: auto !important;
+}
+
+.ql-editor code {
+    background-color: #f3f4f6 !important;
+    padding: 0.125rem 0.25rem !important;
+    border-radius: 0.25rem !important;
+    font-family: monospace !important;
+}
+
+/* Blockquotes */
+.ql-editor blockquote {
+    border-left: 4px solid #cbd5e1 !important;
+    padding-left: 1rem !important;
+    margin: 1rem 0 !important;
+    color: #64748b !important;
+}
+
+/* Images */
+.ql-editor img {
+    max-width: 100% !important;
+    height: auto !important;
+    border-radius: 0.5rem !important;
+    margin: 1rem 0 !important;
+}
+
+/* Ensure toolbar buttons are visible */
+.ql-toolbar {
+    border: 1px solid #cbd5e1 !important;
+    border-bottom: none !important;
+    background-color: #f8fafc !important;
+    border-radius: 0.5rem 0.5rem 0 0 !important;
+}
+
+.ql-container {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 0 0 0.5rem 0.5rem !important;
+    font-family: inherit !important;
+}
+
+/* Active formatting buttons */
+.ql-toolbar .ql-active {
+    color: #2563eb !important;
+}
+
+.ql-toolbar .ql-stroke {
+    stroke: #1e293b !important;
+}
+
+.ql-toolbar .ql-active .ql-stroke {
+    stroke: #2563eb !important;
+}
+
+.ql-toolbar .ql-fill {
+    fill: #1e293b !important;
+}
+
+.ql-toolbar .ql-active .ql-fill {
+    fill: #2563eb !important;
+}
+
+/* Ensure editor has min height */
+.ql-container.ql-snow {
+    min-height: 200px;
+}
+
+/* Focus state */
+.ql-container.ql-snow:focus-within {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}

@@ -1,27 +1,104 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import axios from 'axios'
 import { Send, Sparkles, Bot, Lightbulb, MessageSquare, Zap, Shield, CheckCircle, TrendingUp, Users, Code, Loader } from 'lucide-react'
 import AiComponent from '../../components/AiComponent'
+import AiChatOutput from '../../components/AiChatOutput'
 
 const AIPage = () => {
     const { projectId } = useParams()
     const [message, setMessage] = useState('')
-    const [messages, setMessages] = useState([
-        { id: 1, type: 'ai', text: 'Hello! I\'m your AI assistant for this project. How can I help you today?' }
-    ])
+    const [messages, setMessages] = useState([])
     const [activeTab, setActiveTab] = useState('chat')
     const [projectData, setProjectData] = useState(null)
     const [loading, setLoading] = useState(true)
+    const [loadingMessages, setLoadingMessages] = useState(true)
+    const [currentUser, setCurrentUser] = useState(null)
     const [shouldGenerateRecs, setShouldGenerateRecs] = useState(false)
     const [recommendations, setRecommendations] = useState([])
     const [generatingRecs, setGeneratingRecs] = useState(false)
     const [aiPrompt, setAiPrompt] = useState('')
     const [generateKey, setGenerateKey] = useState(0)
+    const [chatPrompt, setChatPrompt] = useState('')
+    const [chatGenerateKey, setChatGenerateKey] = useState(0)
+    const [waitingForResponse, setWaitingForResponse] = useState(false)
+    const chatEndRef = useRef(null)
+
+    // Load current user
+    useEffect(() => {
+        const userStr = localStorage.getItem('user')
+        if (userStr) {
+            try {
+                const userData = JSON.parse(userStr)
+                setCurrentUser(userData)
+            } catch (error) {
+                console.error('Error parsing user data:', error)
+            }
+        }
+    }, [])
 
     useEffect(() => {
         fetchProjectData()
     }, [projectId])
+
+    // Fetch chat messages when user and project are loaded
+    useEffect(() => {
+        if (currentUser && projectId) {
+            fetchChatMessages()
+        }
+    }, [currentUser, projectId])
+
+    // Auto-scroll to bottom when new messages arrive
+    useEffect(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }, [messages])
+
+    const fetchChatMessages = async () => {
+        try {
+            setLoadingMessages(true)
+            const response = await axios.get(
+                `http://localhost:3000/api/ai-chat/project/${projectId}?userId=${currentUser.id}`
+            )
+
+            if (response.data.success) {
+                const loadedMessages = response.data.messages.map(msg => ({
+                    id: msg.id,
+                    type: msg.messageType,
+                    text: msg.messageText,
+                    timestamp: msg.createdAt,
+                    userName: msg.userName,
+                    userEmail: msg.userEmail
+                }))
+
+                // Add welcome message if no messages exist
+                if (loadedMessages.length === 0) {
+                    setMessages([
+                        {
+                            id: 'welcome',
+                            type: 'ai',
+                            text: 'Hello! I\'m your AI assistant for this project. How can I help you today?',
+                            timestamp: new Date().toISOString()
+                        }
+                    ])
+                } else {
+                    setMessages(loadedMessages)
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching chat messages:', error)
+            // Set welcome message on error
+            setMessages([
+                {
+                    id: 'welcome',
+                    type: 'ai',
+                    text: 'Hello! I\'m your AI assistant for this project. How can I help you today?',
+                    timestamp: new Date().toISOString()
+                }
+            ])
+        } finally {
+            setLoadingMessages(false)
+        }
+    }
 
     const fetchProjectData = async () => {
         try {
@@ -58,6 +135,51 @@ const AIPage = () => {
 
         setRecommendations(parsedRecs)
         setGeneratingRecs(false)
+    }
+
+    const handleChatAiResponse = async (response) => {
+        setWaitingForResponse(false)
+
+        try {
+            // Save AI response to database
+            const saveResponse = await axios.post('http://localhost:3000/api/ai-chat/message', {
+                projectId: parseInt(projectId),
+                userId: currentUser.id,
+                messageType: 'ai',
+                messageText: response
+            })
+
+            if (saveResponse.data.success) {
+                // Update messages with the saved message from database
+                setMessages(prevMessages => {
+                    const newMessages = [...prevMessages]
+                    // Remove the "processing" message
+                    newMessages.pop()
+                    // Add the saved AI response
+                    newMessages.push({
+                        id: saveResponse.data.chatMessage.id,
+                        type: 'ai',
+                        text: response,
+                        timestamp: saveResponse.data.chatMessage.createdAt
+                    })
+                    return newMessages
+                })
+            }
+        } catch (error) {
+            console.error('Error saving AI response:', error)
+            // Still show the message even if save fails
+            setMessages(prevMessages => {
+                const newMessages = [...prevMessages]
+                newMessages.pop()
+                newMessages.push({
+                    id: Date.now(),
+                    type: 'ai',
+                    text: response,
+                    timestamp: new Date().toISOString()
+                })
+                return newMessages
+            })
+        }
     }
 
     const generateRecommendations = () => {
@@ -112,13 +234,46 @@ Make each recommendation practical and directly related to the project details p
         return colorMap[category] || 'blue'
     }
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault()
-        if (message.trim()) {
-            setMessages([...messages,
-            { id: messages.length + 1, type: 'user', text: message },
-            { id: messages.length + 2, type: 'ai', text: 'I\'m processing your request...' }
-            ])
+        if (message.trim() && !waitingForResponse && currentUser) {
+            const userMessage = {
+                id: Date.now(),
+                type: 'user',
+                text: message,
+                timestamp: new Date().toISOString(),
+                userName: currentUser.name || currentUser.email?.split('@')[0] || 'User'
+            }
+
+            const processingMessage = {
+                id: Date.now() + 1,
+                type: 'ai',
+                text: '...',
+                timestamp: new Date().toISOString()
+            }
+
+            setMessages(prev => [...prev, userMessage, processingMessage])
+
+            try {
+                // Save user message to database
+                await axios.post('http://localhost:3000/api/ai-chat/message', {
+                    projectId: parseInt(projectId),
+                    userId: currentUser.id,
+                    messageType: 'user',
+                    messageText: message
+                })
+            } catch (error) {
+                console.error('Error saving user message:', error)
+            }
+
+            // Set up the AI prompt for chat
+            const contextPrompt = projectData
+                ? `Context: User is working on project "${projectData.title}" - ${projectData.description}\n\nUser question: ${message}\n\nPlease provide a helpful, concise response.`
+                : `User question: ${message}\n\nPlease provide a helpful, concise response.`
+
+            setChatPrompt(contextPrompt)
+            setChatGenerateKey(prev => prev + 1)
+            setWaitingForResponse(true)
             setMessage('')
         }
     }
@@ -136,9 +291,9 @@ Make each recommendation practical and directly related to the project details p
     }
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-linear-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
+        <div className="flex flex-col h-full">
+            <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center">
                     <Sparkles className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -148,7 +303,7 @@ Make each recommendation practical and directly related to the project details p
             </div>
 
             {/* Tab Navigation */}
-            <div className="bg-white rounded-xl shadow-sm p-2 flex gap-2 mb-6">
+            <div className="bg-white rounded-xl shadow-sm p-2 flex gap-2 mb-4">
                 <button
                     onClick={() => setActiveTab('chat')}
                     className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${activeTab === 'chat'
@@ -178,51 +333,69 @@ Make each recommendation practical and directly related to the project details p
 
             {/* Chat Tab */}
             {activeTab === 'chat' && (
-                <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                    {/* Chat Messages */}
-                    <div className="bg-slate-50 p-6 min-h-[500px] max-h-[500px] overflow-y-auto space-y-4">
-                        {messages.map(msg => (
-                            <div key={msg.id} className={`flex gap-3 ${msg.type === 'user' ? 'justify-end' : ''}`}>
-                                {msg.type === 'ai' && (
-                                    <div className="w-8 h-8 bg-linear-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center shrink-0">
-                                        <Bot className="w-4 h-4 text-white" />
-                                    </div>
-                                )}
-                                <div className={`max-w-[70%] rounded-lg p-4 ${msg.type === 'ai'
-                                    ? 'bg-white shadow-sm'
-                                    : 'bg-blue-600 text-white'
-                                    }`}>
-                                    <p className={msg.type === 'ai' ? 'text-slate-700' : 'text-white'}>
-                                        {msg.text}
-                                    </p>
-                                </div>
+                <div className="bg-slate-50 rounded-xl overflow-hidden flex flex-col flex-1">
+                    {/* Hidden AI Component for chat */}
+                    {waitingForResponse && chatPrompt && (
+                        <AiComponent
+                            key={chatGenerateKey}
+                            userInput={chatPrompt}
+                            onResponse={handleChatAiResponse}
+                        />
+                    )}
+
+                    {/* Chat Header */}
+                    <div className="bg-white border-b border-slate-200 px-6 py-4">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
+                                <Bot className="w-5 h-5 text-white" />
                             </div>
-                        ))}
+                            <div>
+                                <h3 className="font-semibold text-slate-800">AI Assistant</h3>
+                                <p className="text-xs text-slate-500">Always here to help</p>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Input Form */}
-                    <form onSubmit={handleSubmit} className="p-4 border-t border-slate-200 flex gap-3">
-                        <input
-                            type="text"
-                            value={message}
-                            onChange={(e) => setMessage(e.target.value)}
-                            placeholder="Ask me anything about your project..."
-                            className="flex-1 px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                        <button
-                            type="submit"
-                            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-                        >
-                            <Send className="w-5 h-5" />
-                            Send
-                        </button>
-                    </form>
+                    {/* Chat Messages - Scrollable Area */}
+                    <div className="flex-1 overflow-y-auto px-6 py-4">
+                        {loadingMessages ? (
+                            <div className="flex items-center justify-center h-full">
+                                <Loader className="w-8 h-8 text-purple-600 animate-spin" />
+                            </div>
+                        ) : (
+                            <>
+                                <AiChatOutput messages={messages} />
+                                <div ref={chatEndRef} />
+                            </>
+                        )}
+                    </div>
+
+                    {/* Input Form - Fixed at Bottom */}
+                    <div className="bg-white border-t border-slate-200 p-4">
+                        <form onSubmit={handleSubmit} className="flex gap-3">
+                            <input
+                                type="text"
+                                value={message}
+                                onChange={(e) => setMessage(e.target.value)}
+                                disabled={waitingForResponse}
+                                placeholder={waitingForResponse ? "AI is thinking..." : "Type your message..."}
+                                className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent focus:bg-white transition-all disabled:bg-slate-100 disabled:cursor-not-allowed"
+                            />
+                            <button
+                                type="submit"
+                                disabled={waitingForResponse || !message.trim()}
+                                className="px-5 py-3 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                            >
+                                <Send className="w-4 h-4" />
+                            </button>
+                        </form>
+                    </div>
                 </div>
             )}
 
             {/* Recommendations Tab */}
             {activeTab === 'recommendations' && (
-                <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="bg-white rounded-xl shadow-sm p-6 flex-1 overflow-y-auto">
                     {/* Hidden AI Component for fetching */}
                     {shouldGenerateRecs && aiPrompt && (
                         <AiComponent

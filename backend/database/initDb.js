@@ -210,6 +210,114 @@ function initializeTables() {
         db.run(`CREATE INDEX IF NOT EXISTS idx_activityLogs_timestamp ON ActivityLogs(timestamp)`, (err) => {
             if (err) console.error('Error creating activityLogs timestamp index:', err.message);
         });
+
+        // Create Notes table
+        db.run(`
+            CREATE TABLE IF NOT EXISTS Notes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                projectId INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                content TEXT NOT NULL,
+                createdBy INTEGER NOT NULL,
+                createdByName TEXT NOT NULL,
+                updatedBy INTEGER,
+                updatedByName TEXT,
+                isDeleted INTEGER DEFAULT 0,
+                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (projectId) REFERENCES Projects(id) ON DELETE CASCADE,
+                FOREIGN KEY (createdBy) REFERENCES Users(id),
+                FOREIGN KEY (updatedBy) REFERENCES Users(id)
+            )
+        `, (err) => {
+            if (err) {
+                console.error('Error creating Notes table:', err.message);
+            } else {
+                console.log('Notes table ready');
+            }
+        });
+
+        // Create NotePermissions table for role-based access control
+        db.run(`
+            CREATE TABLE IF NOT EXISTS NotePermissions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                noteId INTEGER NOT NULL,
+                userId INTEGER NOT NULL,
+                canEdit INTEGER DEFAULT 0,
+                canDelete INTEGER DEFAULT 0,
+                grantedBy INTEGER NOT NULL,
+                grantedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (noteId) REFERENCES Notes(id) ON DELETE CASCADE,
+                FOREIGN KEY (userId) REFERENCES Users(id),
+                FOREIGN KEY (grantedBy) REFERENCES Users(id),
+                UNIQUE(noteId, userId)
+            )
+        `, (err) => {
+            if (err) {
+                console.error('Error creating NotePermissions table:', err.message);
+            } else {
+                console.log('NotePermissions table ready');
+            }
+        });
+
+        // Create indexes for Notes table
+        db.run(`CREATE INDEX IF NOT EXISTS idx_notes_projectId ON Notes(projectId)`, (err) => {
+            if (err) console.error('Error creating notes projectId index:', err.message);
+        });
+
+        db.run(`CREATE INDEX IF NOT EXISTS idx_notes_createdBy ON Notes(createdBy)`, (err) => {
+            if (err) console.error('Error creating notes createdBy index:', err.message);
+        });
+
+        db.run(`CREATE INDEX IF NOT EXISTS idx_notes_createdAt ON Notes(createdAt DESC)`, (err) => {
+            if (err) console.error('Error creating notes createdAt index:', err.message);
+        });
+
+        db.run(`CREATE INDEX IF NOT EXISTS idx_notes_isDeleted ON Notes(isDeleted)`, (err) => {
+            if (err) console.error('Error creating notes isDeleted index:', err.message);
+        });
+
+        // Create indexes for NotePermissions table
+        db.run(`CREATE INDEX IF NOT EXISTS idx_notePermissions_noteId ON NotePermissions(noteId)`, (err) => {
+            if (err) console.error('Error creating notePermissions noteId index:', err.message);
+        });
+
+        db.run(`CREATE INDEX IF NOT EXISTS idx_notePermissions_userId ON NotePermissions(userId)`, (err) => {
+            if (err) console.error('Error creating notePermissions userId index:', err.message);
+        });
+
+        // Create AIChatMessages table
+        db.run(`
+            CREATE TABLE IF NOT EXISTS AIChatMessages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                projectId INTEGER NOT NULL,
+                userId INTEGER NOT NULL,
+                messageType TEXT NOT NULL CHECK(messageType IN ('user', 'ai')),
+                messageText TEXT NOT NULL,
+                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (projectId) REFERENCES Projects(id) ON DELETE CASCADE,
+                FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE
+            )
+        `, (err) => {
+            if (err) {
+                console.error('Error creating AIChatMessages table:', err.message);
+            } else {
+                console.log('AIChatMessages table ready');
+            }
+        });
+
+        // Create indexes for AIChatMessages table
+        db.run(`CREATE INDEX IF NOT EXISTS idx_aiChatMessages_projectId ON AIChatMessages(projectId)`, (err) => {
+            if (err) console.error('Error creating aiChatMessages projectId index:', err.message);
+        });
+
+        db.run(`CREATE INDEX IF NOT EXISTS idx_aiChatMessages_userId ON AIChatMessages(userId)`, (err) => {
+            if (err) console.error('Error creating aiChatMessages userId index:', err.message);
+        });
+
+        db.run(`CREATE INDEX IF NOT EXISTS idx_aiChatMessages_createdAt ON AIChatMessages(createdAt DESC)`, (err) => {
+            if (err) console.error('Error creating aiChatMessages createdAt index:', err.message);
+        });
     });
 }
 

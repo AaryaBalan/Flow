@@ -6,6 +6,8 @@ const cors = require('cors');
 const userRoutes = require('./routes/userRoutes');
 const projectRoutes = require('./routes/projectRoutes');
 const taskRoutes = require('./routes/taskRoutes');
+const noteRoutes = require('./routes/noteRoutes');
+const aiChatRoutes = require('./routes/aiChatRoutes');
 
 // Load environment variables from .env file
 dotenv.config();
@@ -20,6 +22,8 @@ app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 app.use('/api/users', userRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
+app.use('/api/notes', noteRoutes);
+app.use('/api/ai-chat', aiChatRoutes);
 
 
 // Sample route
