@@ -313,7 +313,7 @@ Make each recommendation practical and directly related to the project details p
                         }`}
                 >
                     <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    <span className="hidden xs:inline">Chat</span>
+                    <span className="hidden sm:inline">Chat</span>
                 </button>
                 <button
                     onClick={() => {
@@ -328,7 +328,7 @@ Make each recommendation practical and directly related to the project details p
                         }`}
                 >
                     <Lightbulb className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    <span className="hidden xs:inline">Recommendations</span>
+                    <span className="hidden sm:inline">Recommendations</span>
                 </button>
             </div>
 

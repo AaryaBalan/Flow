@@ -275,7 +275,7 @@ const TaskPage = () => {
                                                                         title={isRestricted ? "You cannot complete this task - Only author can" : "Only you can complete this task"}
                                                                     >
                                                                         <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                                                                        {isRestricted && <span className="ml-0.5 sm:ml-1 hidden xs:inline">Restricted</span>}
+                                                                        {isRestricted && <span className="ml-0.5 sm:ml-1 hidden sm:inline">Restricted</span>}
                                                                     </div>
                                                                 ) : (
                                                                     ""
@@ -350,7 +350,7 @@ const TaskPage = () => {
                                                                         title={isRestricted ? "Restricted - Only author can modify" : "Author-only task"}
                                                                     >
                                                                         <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                                                                        {isRestricted && <span className="ml-0.5 sm:ml-1 hidden xs:inline">Restricted</span>}
+                                                                        {isRestricted && <span className="ml-0.5 sm:ml-1 hidden sm:inline">Restricted</span>}
                                                                     </div>
                                                                 ) : (
                                                                     ""
