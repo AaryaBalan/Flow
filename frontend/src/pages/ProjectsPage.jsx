@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import axios from 'axios'
 import { v4 as uuidv4 } from 'uuid'
 import API_BASE_URL from '../config/api'
+import TimeTracker from '../utils/timeTracker'
 
 const ProjectsPage = () => {
     const [isModalOpen, setIsModalOpen] = useState(false)
@@ -18,6 +19,10 @@ const ProjectsPage = () => {
     const [isLoading, setIsLoading] = useState(true)
     const [currentUser, setCurrentUser] = useState(null)
     const [userActivity, setUserActivity] = useState(null)
+    const [workMinutes, setWorkMinutes] = useState(0)
+    const [breakMinutes, setBreakMinutes] = useState(0)
+    const [trackingStatus, setTrackingStatus] = useState('stopped')
+    const [lastBreakTime, setLastBreakTime] = useState(null)
     const [formData, setFormData] = useState({
         title: '',
         description: '',
@@ -55,6 +60,33 @@ const ProjectsPage = () => {
         if (currentUser?.id) {
             fetchUserProjects()
             fetchUserActivity()
+        }
+    }, [currentUser])
+
+    // Initialize TimeTracker when user is loaded
+    useEffect(() => {
+        if (currentUser?.id) {
+            const timeTracker = TimeTracker.getInstance();
+            
+            // Set up callbacks for time updates
+            timeTracker.onTimeUpdate = (data) => {
+                setWorkMinutes(data.workMinutes);
+                setBreakMinutes(data.breakMinutes);
+                setTrackingStatus(data.status);
+                setLastBreakTime(data.lastBreakTime);
+            };
+            
+            timeTracker.onStatusChange = (status) => {
+                setTrackingStatus(status);
+            };
+            
+            // Start tracking
+            timeTracker.startTracking(currentUser.id);
+            
+            return () => {
+                // Cleanup on unmount
+                timeTracker.stopTracking();
+            };
         }
     }, [currentUser])
 
