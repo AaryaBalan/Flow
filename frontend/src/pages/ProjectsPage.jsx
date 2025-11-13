@@ -67,7 +67,7 @@ const ProjectsPage = () => {
     useEffect(() => {
         if (currentUser?.id) {
             const timeTracker = TimeTracker.getInstance();
-            
+
             // Set up callbacks for time updates
             timeTracker.onTimeUpdate = (data) => {
                 setWorkMinutes(data.workMinutes);
@@ -75,14 +75,14 @@ const ProjectsPage = () => {
                 setTrackingStatus(data.status);
                 setLastBreakTime(data.lastBreakTime);
             };
-            
+
             timeTracker.onStatusChange = (status) => {
                 setTrackingStatus(status);
             };
-            
+
             // Start tracking
             timeTracker.startTracking(currentUser.id);
-            
+
             return () => {
                 // Cleanup on unmount
                 timeTracker.stopTracking();

@@ -16,34 +16,34 @@ class TimeTracker {
         this.isTracking = false;
         this.userId = null;
         this.todayKey = this.getTodayKey();
-        
+
         // Time accumulation (in milliseconds)
         this.workSessionStart = null;
         this.breakSessionStart = null;
         this.totalWorkMs = 0;
         this.totalBreakMs = 0;
         this.lastBreakTimestamp = null;
-        
+
         // Activity tracking
         this.lastActivityTime = Date.now();
         this.isWindowFocused = document.hasFocus();
         this.isWindowVisible = !document.hidden;
-        
+
         // Timers
         this.inactivityTimer = null;
         this.syncTimer = null;
         this.updateTimer = null;
         this.dailyResetTimer = null;
-        
+
         // Configuration
         this.INACTIVITY_THRESHOLD = 20 * 60 * 1000; // 20 minutes
         this.SYNC_INTERVAL = 30 * 1000; // 30 seconds
         this.UPDATE_INTERVAL = 1000; // 1 second for UI updates
-        
+
         // Callbacks for UI updates
         this.onTimeUpdate = null;
         this.onStatusChange = null;
-        
+
         this.initializeEventListeners();
         this.loadTodayData();
         this.setupDailyReset();
@@ -69,19 +69,19 @@ class TimeTracker {
             const tomorrow = new Date(now);
             tomorrow.setDate(tomorrow.getDate() + 1);
             tomorrow.setHours(0, 0, 0, 0);
-            
+
             const timeUntilMidnight = tomorrow - now;
-            
+
             if (this.dailyResetTimer) {
                 clearTimeout(this.dailyResetTimer);
             }
-            
+
             this.dailyResetTimer = setTimeout(() => {
                 this.resetDailyData();
                 scheduleNextReset();
             }, timeUntilMidnight);
         };
-        
+
         scheduleNextReset();
     }
 
@@ -93,22 +93,22 @@ class TimeTracker {
         if (this.isTracking) {
             this.syncWithServer();
         }
-        
+
         // Reset counters
         this.totalWorkMs = 0;
         this.totalBreakMs = 0;
         this.workSessionStart = null;
         this.breakSessionStart = null;
         this.todayKey = this.getTodayKey();
-        
+
         // Clear localStorage for today
         localStorage.removeItem(`timetracker_${this.todayKey}`);
-        
+
         // Resume tracking if it was active
         if (this.isTracking) {
             this.resumeWork();
         }
-        
+
         console.log('[TimeTracker] Daily reset completed at', new Date().toLocaleTimeString());
     }
 
@@ -120,7 +120,7 @@ class TimeTracker {
         document.addEventListener('visibilitychange', () => this.handleVisibilityChange());
         window.addEventListener('focus', () => this.handleWindowFocus());
         window.addEventListener('blur', () => this.handleWindowBlur());
-        
+
         // User activity events
         document.addEventListener('mousemove', (e) => this.handleActivity(e));
         document.addEventListener('mousedown', () => this.handleActivity());
@@ -136,7 +136,7 @@ class TimeTracker {
      */
     handleVisibilityChange() {
         this.isWindowVisible = !document.hidden;
-        
+
         if (document.hidden) {
             // Window hidden - pause work
             if (this.workSessionStart) {
@@ -155,12 +155,12 @@ class TimeTracker {
      */
     handleWindowFocus() {
         this.isWindowFocused = true;
-        
+
         if (this.isTracking && !this.workSessionStart && this.breakSessionStart) {
             // Resume work if we were on break
             this.resumeWork();
         }
-        
+
         // Reset inactivity timer
         this.resetInactivityTimer();
     }
@@ -182,14 +182,14 @@ class TimeTracker {
             const now = Date.now();
             if (now - this.lastActivityTime < 100) return; // Debounce
         }
-        
+
         this.lastActivityTime = Date.now();
-        
+
         // If on break and user becomes active, resume work
         if (this.isTracking && this.breakSessionStart && !this.workSessionStart) {
             this.resumeWork();
         }
-        
+
         // Reset inactivity timer
         this.resetInactivityTimer();
     }
@@ -201,7 +201,7 @@ class TimeTracker {
         if (this.inactivityTimer) {
             clearTimeout(this.inactivityTimer);
         }
-        
+
         if (this.isTracking && this.workSessionStart) {
             this.inactivityTimer = setTimeout(() => {
                 this.handleInactivity();
@@ -223,10 +223,10 @@ class TimeTracker {
      */
     startTracking(userId) {
         if (this.isTracking) return;
-        
+
         this.userId = userId;
         this.isTracking = true;
-        
+
         // Check if we should continue from previous state
         const previousState = this.getPreviousState();
         if (previousState === 'working') {
@@ -234,16 +234,16 @@ class TimeTracker {
         } else {
             this.startBreak();
         }
-        
+
         // Start sync interval
         this.startSync();
-        
+
         // Start update interval for UI
         this.startUpdates();
-        
+
         // Start inactivity timer
         this.resetInactivityTimer();
-        
+
         console.log('[TimeTracker] Started tracking for user', userId);
     }
 
@@ -252,21 +252,21 @@ class TimeTracker {
      */
     stopTracking() {
         if (!this.isTracking) return;
-        
+
         // Finalize current session
         if (this.workSessionStart) {
             this.pauseWork();
         }
-        
+
         // Clear timers
         if (this.inactivityTimer) clearTimeout(this.inactivityTimer);
         if (this.syncTimer) clearInterval(this.syncTimer);
         if (this.updateTimer) clearInterval(this.updateTimer);
         if (this.dailyResetTimer) clearTimeout(this.dailyResetTimer);
-        
+
         this.isTracking = false;
         this.saveTodayData();
-        
+
         console.log('[TimeTracker] Stopped tracking');
     }
 
@@ -275,22 +275,22 @@ class TimeTracker {
      */
     resumeWork() {
         if (this.workSessionStart || !this.isTracking) return;
-        
+
         // End break session if any
         if (this.breakSessionStart) {
             const breakDuration = Date.now() - this.breakSessionStart;
             this.totalBreakMs += breakDuration;
             this.breakSessionStart = null;
         }
-        
+
         this.workSessionStart = Date.now();
         this.savePreviousState('working');
         this.resetInactivityTimer();
-        
+
         if (this.onStatusChange) {
             this.onStatusChange('active');
         }
-        
+
         console.log('[TimeTracker] Resumed work');
     }
 
@@ -299,25 +299,25 @@ class TimeTracker {
      */
     pauseWork() {
         if (!this.workSessionStart) return;
-        
+
         const workDuration = Date.now() - this.workSessionStart;
         this.totalWorkMs += workDuration;
         this.workSessionStart = null;
-        
+
         // Start break session
         this.breakSessionStart = Date.now();
         this.lastBreakTimestamp = this.breakSessionStart;
         this.savePreviousState('break');
-        
+
         if (this.inactivityTimer) {
             clearTimeout(this.inactivityTimer);
             this.inactivityTimer = null;
         }
-        
+
         if (this.onStatusChange) {
             this.onStatusChange('break');
         }
-        
+
         console.log('[TimeTracker] Paused work, accumulated', Math.round(workDuration / 1000), 'seconds');
     }
 
@@ -326,7 +326,7 @@ class TimeTracker {
      */
     startBreak() {
         if (this.breakSessionStart || !this.isTracking) return;
-        
+
         if (this.workSessionStart) {
             this.pauseWork();
         } else {
@@ -416,11 +416,11 @@ class TimeTracker {
      */
     async syncWithServer() {
         if (!this.userId || !this.isTracking) return;
-        
+
         try {
             const workMinutes = Math.round(this.getTotalWorkMs() / (1000 * 60));
             const breakMinutes = Math.round(this.getTotalBreakMs() / (1000 * 60));
-            
+
             const response = await fetch(`/api/users/${this.userId}/sync-time`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -431,7 +431,7 @@ class TimeTracker {
                     date: this.todayKey
                 })
             });
-            
+
             if (!response.ok) {
                 console.error('[TimeTracker] Sync failed:', response.statusText);
             }
