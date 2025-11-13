@@ -223,14 +223,14 @@ Make each recommendation practical and directly related to the project details p
 
     const getCategoryColorName = (category) => {
         const colorMap = {
-            'Architecture': 'purple',
+            'Architecture': 'teal',
             'Security': 'red',
             'Performance': 'yellow',
             'Testing': 'green',
             'Documentation': 'yellow',
             'User Experience': 'blue',
             'DevOps': 'indigo',
-            'Features': 'purple'
+            'Features': 'teal'
         }
         return colorMap[category] || 'blue'
     }
@@ -281,7 +281,7 @@ Make each recommendation practical and directly related to the project details p
 
     const getColorClasses = (color) => {
         const colors = {
-            purple: 'bg-purple-100 text-purple-700 border-purple-200',
+            teal: 'bg-teal-100 text-teal-700 border-teal-200',
             red: 'bg-red-100 text-red-700 border-red-200',
             yellow: 'bg-yellow-100 text-yellow-700 border-yellow-200',
             green: 'bg-green-100 text-green-700 border-green-200',
@@ -294,7 +294,7 @@ Make each recommendation practical and directly related to the project details p
     return (
         <div className="flex flex-col min-h-[calc(100vh-130px)]">
             <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4 px-2 sm:px-0">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-600 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-teal-600 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0">
                     <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
                 <div className="min-w-0">
@@ -347,7 +347,7 @@ Make each recommendation practical and directly related to the project details p
                     {/* Chat Header */}
                     <div className="bg-white border-b border-slate-200 px-3 sm:px-6 py-3 sm:py-4">
                         <div className="flex items-center gap-2 sm:gap-3">
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-600 rounded-full flex items-center justify-center shrink-0">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-teal-600 rounded-full flex items-center justify-center shrink-0">
                                 <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                             </div>
                             <div className="min-w-0">
@@ -361,7 +361,7 @@ Make each recommendation practical and directly related to the project details p
                     <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-3 sm:py-4">
                         {loadingMessages ? (
                             <div className="flex items-center justify-center h-full">
-                                <Loader className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 animate-spin" />
+                                <Loader className="w-6 h-6 sm:w-8 sm:h-8 text-teal-600 animate-spin" />
                             </div>
                         ) : (
                             <>
@@ -380,12 +380,12 @@ Make each recommendation practical and directly related to the project details p
                                 onChange={(e) => setMessage(e.target.value)}
                                 disabled={waitingForResponse}
                                 placeholder={waitingForResponse ? "AI is thinking..." : "Type your message..."}
-                                className="flex-1 px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-slate-50 border border-slate-200 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent focus:bg-white transition-all disabled:bg-slate-100 disabled:cursor-not-allowed"
+                                className="flex-1 px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-slate-50 border border-slate-200 rounded-full focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white transition-all disabled:bg-slate-100 disabled:cursor-not-allowed"
                             />
                             <button
                                 type="submit"
                                 disabled={waitingForResponse || !message.trim()}
-                                className="px-3 sm:px-5 py-2 sm:py-3 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed font-medium shrink-0"
+                                className="px-3 sm:px-5 py-2 sm:py-3 bg-teal-600 text-white rounded-full hover:bg-teal-700 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed font-medium shrink-0"
                             >
                                 <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                 <span className="hidden sm:inline text-sm">Send</span>
@@ -422,7 +422,7 @@ Make each recommendation practical and directly related to the project details p
                         <button
                             onClick={generateRecommendations}
                             disabled={generatingRecs || loading}
-                            className="px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base bg-purple-600 text-white rounded-lg sm:rounded-xl hover:bg-purple-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg whitespace-nowrap"
+                            className="px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base bg-teal-600 text-white rounded-lg sm:rounded-xl hover:bg-teal-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg whitespace-nowrap"
                         >
                             {generatingRecs ? (
                                 <>
@@ -443,7 +443,7 @@ Make each recommendation practical and directly related to the project details p
                     {/* Loading State */}
                     {generatingRecs && recommendations.length === 0 && (
                         <div className="flex flex-col items-center justify-center py-12 sm:py-20">
-                            <Loader className="w-12 h-12 sm:w-16 sm:h-16 text-purple-600 animate-spin mb-3 sm:mb-4" />
+                            <Loader className="w-12 h-12 sm:w-16 sm:h-16 text-teal-600 animate-spin mb-3 sm:mb-4" />
                             <p className="text-slate-600 text-base sm:text-lg font-medium">Analyzing your project...</p>
                             <p className="text-slate-500 text-xs sm:text-sm mt-1 sm:mt-2">Our AI is generating personalized recommendations</p>
                         </div>
@@ -459,8 +459,8 @@ Make each recommendation practical and directly related to the project details p
                     {/* Empty State */}
                     {!loading && !generatingRecs && recommendations.length === 0 && (
                         <div className="text-center py-12 sm:py-20 px-4">
-                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                                <Lightbulb className="w-8 h-8 sm:w-10 sm:h-10 text-purple-600" />
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                                <Lightbulb className="w-8 h-8 sm:w-10 sm:h-10 text-teal-600" />
                             </div>
                             <h4 className="text-lg sm:text-xl font-bold text-slate-800 mb-2">No Recommendations Yet</h4>
                             <p className="text-sm sm:text-base text-slate-600 mb-4 sm:mb-6 max-w-md mx-auto">
@@ -477,7 +477,7 @@ Make each recommendation practical and directly related to the project details p
                                 return (
                                     <div
                                         key={rec.id}
-                                        className="p-3 sm:p-5 border-2 border-slate-100 rounded-lg sm:rounded-xl hover:border-purple-200 hover:shadow-lg transition-all cursor-pointer group"
+                                        className="p-3 sm:p-5 border-2 border-slate-100 rounded-lg sm:rounded-xl hover:border-teal-200 hover:shadow-lg transition-all cursor-pointer group"
                                     >
                                         <div className="flex items-start gap-2 sm:gap-4">
                                             <div className={`p-2 sm:p-3 rounded-lg ${getColorClasses(rec.color).split(' ')[0]} group-hover:scale-110 transition-transform shrink-0`}>

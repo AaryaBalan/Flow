@@ -318,6 +318,57 @@ function initializeTables() {
         db.run(`CREATE INDEX IF NOT EXISTS idx_aiChatMessages_createdAt ON AIChatMessages(createdAt DESC)`, (err) => {
             if (err) console.error('Error creating aiChatMessages createdAt index:', err.message);
         });
+
+        // Create ChatMessages table for project chat
+        db.run(`
+            CREATE TABLE IF NOT EXISTS ChatMessages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                projectId INTEGER NOT NULL,
+                senderId INTEGER NOT NULL,
+                senderName TEXT NOT NULL,
+                messageContent TEXT NOT NULL,
+                replyToMessageId INTEGER,
+                replyToUserId INTEGER,
+                replyToUserName TEXT,
+                replyToMessageContent TEXT,
+                messageStatus TEXT DEFAULT 'sent' CHECK(messageStatus IN ('sent', 'delivered', 'read')),
+                isDeleted INTEGER DEFAULT 0,
+                editedAt DATETIME,
+                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (projectId) REFERENCES Projects(id) ON DELETE CASCADE,
+                FOREIGN KEY (senderId) REFERENCES Users(id) ON DELETE CASCADE,
+                FOREIGN KEY (replyToMessageId) REFERENCES ChatMessages(id) ON DELETE SET NULL,
+                FOREIGN KEY (replyToUserId) REFERENCES Users(id) ON DELETE SET NULL
+            )
+        `, (err) => {
+            if (err) {
+                console.error('Error creating ChatMessages table:', err.message);
+            } else {
+                console.log('ChatMessages table ready');
+            }
+        });
+
+        // Create indexes for ChatMessages table
+        db.run(`CREATE INDEX IF NOT EXISTS idx_chatMessages_projectId ON ChatMessages(projectId)`, (err) => {
+            if (err) console.error('Error creating chatMessages projectId index:', err.message);
+        });
+
+        db.run(`CREATE INDEX IF NOT EXISTS idx_chatMessages_senderId ON ChatMessages(senderId)`, (err) => {
+            if (err) console.error('Error creating chatMessages senderId index:', err.message);
+        });
+
+        db.run(`CREATE INDEX IF NOT EXISTS idx_chatMessages_createdAt ON ChatMessages(createdAt DESC)`, (err) => {
+            if (err) console.error('Error creating chatMessages createdAt index:', err.message);
+        });
+
+        db.run(`CREATE INDEX IF NOT EXISTS idx_chatMessages_isDeleted ON ChatMessages(isDeleted)`, (err) => {
+            if (err) console.error('Error creating chatMessages isDeleted index:', err.message);
+        });
+
+        db.run(`CREATE INDEX IF NOT EXISTS idx_chatMessages_replyTo ON ChatMessages(replyToMessageId)`, (err) => {
+            if (err) console.error('Error creating chatMessages replyTo index:', err.message);
+        });
     });
 }
 

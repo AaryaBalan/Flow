@@ -121,7 +121,7 @@ const AiChatOutput = ({ messages }) => {
                     className={`flex gap-2.5 ${msg.type === 'user' ? 'justify-end' : ''} ${index === 0 ? '' : 'animate-fadeIn'} group`}
                 >
                     {msg.type === 'ai' && (
-                        <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center shrink-0">
+                        <div className="w-8 h-8 bg-teal-600 rounded-full flex items-center justify-center shrink-0">
                             <Bot className="w-4 h-4 text-white" />
                         </div>
                     )}
@@ -136,8 +136,8 @@ const AiChatOutput = ({ messages }) => {
 
                         <div
                             className={`rounded-md px-4 py-2.5 ${msg.type === 'ai'
-                                ? 'bg-white border border-slate-200'
-                                : 'bg-purple-600 text-white'
+                                    ? 'bg-white border border-slate-200'
+                                    : 'bg-emerald-600 text-white'
                                 }`}
                         >
                             {msg.type === 'ai' ? (
@@ -171,7 +171,7 @@ const AiChatOutput = ({ messages }) => {
 
                             {/* Timestamp */}
                             {msg.text !== '...' && (
-                                <div className={`text-[10px] mt-1.5 ${msg.type === 'ai' ? 'text-slate-400' : 'text-purple-100'}`}>
+                                <div className={`text-[10px] mt-1.5 ${msg.type === 'ai' ? 'text-slate-400' : 'text-emerald-100'}`}>
                                     {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('en-IN', {
                                         hour: '2-digit',
                                         minute: '2-digit'
@@ -182,7 +182,7 @@ const AiChatOutput = ({ messages }) => {
                     </div>
 
                     {msg.type === 'user' && (
-                        <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center shrink-0">
+                        <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center shrink-0">
                             <User className="w-4 h-4 text-white" />
                         </div>
                     )}
