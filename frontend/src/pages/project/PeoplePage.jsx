@@ -116,23 +116,23 @@ const PeoplePage = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+                <div className="min-w-0">
                     <h2 className="text-3xl font-bold text-slate-800">Team Members</h2>
-                    <p className="text-slate-600 mt-1">
+                    <p className="text-slate-600 mt-1 truncate">
                         {isLoading ? 'Loading...' : `${teamMembers.length} people working on this project`}
                     </p>
                 </div>
-                <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto">
                     <UserPlus className="w-5 h-5" />
-                    Add Member
+                    <span className="whitespace-nowrap">Add Member</span>
                 </button>
             </div>
 
             {/* Pending Approval Requests */}
             {project && project.authorId === currentUser.id && pendingRequests.length > 0 && (
                 <div className="bg-white border border-indigo-200 rounded-xl p-6 shadow-sm">
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3 sm:gap-0">
                         <div>
                             <h3 className="text-xl font-bold text-slate-800">Pending Approval Requests</h3>
                             <p className="text-sm text-slate-600 mt-1">{pendingRequests.length} people waiting for approval</p>
@@ -142,7 +142,7 @@ const PeoplePage = () => {
                     <div className="space-y-3">
                         {pendingRequests.map(request => (
                             <div key={request.id} className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-                                <div className="flex items-center gap-4">
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                                     {/* Avatar */}
                                     <div className="w-12 h-12 bg-linear-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center shrink-0">
                                         <span className="text-lg font-bold text-white">{getInitials(request.name)}</span>
@@ -151,15 +151,15 @@ const PeoplePage = () => {
                                     {/* Info */}
                                     <div className="flex-1 min-w-0">
                                         <h4
-                                            className="text-base font-semibold text-slate-800 hover:text-blue-600 cursor-pointer transition-colors"
+                                            className="text-base font-semibold text-slate-800 hover:text-blue-600 cursor-pointer transition-colors truncate"
                                             onClick={() => handleUserClick(request.id)}
                                         >
                                             {request.name}
                                         </h4>
                                         <p className="text-sm text-slate-600">{request.designation || 'Team Member'}</p>
-                                        <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                                        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 mt-1">
                                             <Mail className="w-3 h-3" />
-                                            <span className="truncate">{request.email}</span>
+                                            <span className="truncate max-w-full">{request.email}</span>
                                             {request.company && (
                                                 <>
                                                     <span>•</span>
@@ -176,22 +176,22 @@ const PeoplePage = () => {
                                     </div>
 
                                     {/* Action Buttons */}
-                                    <div className="flex items-center gap-2 shrink-0">
+                                    <div className="flex flex-col sm:flex-row items-center gap-2 shrink-0 mt-3 sm:mt-0 w-full sm:w-auto">
                                         <button
                                             onClick={() => handleApprove(request)}
-                                            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                            className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors w-full sm:w-auto"
                                             title="Approve request"
                                         >
                                             <Check className="w-4 h-4" />
-                                            <span className="hidden sm:inline">Approve</span>
+                                            <span className="truncate">Approve</span>
                                         </button>
                                         <button
                                             onClick={() => handleDeny(request.id, request.name)}
-                                            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                                            className="flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors w-full sm:w-auto"
                                             title="Deny request"
                                         >
                                             <X className="w-4 h-4" />
-                                            <span className="hidden sm:inline">Deny</span>
+                                            <span className="truncate">Deny</span>
                                         </button>
                                     </div>
                                 </div>
@@ -221,7 +221,7 @@ const PeoplePage = () => {
                         {teamMembers.map(member => (
                             <div key={member.id} className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
                                 <div className="flex items-start gap-4">
-                                    <div className={`w-14 h-14 ${member.isOwner ? 'bg-linear-to-br from-amber-500 to-orange-500' : 'bg-linear-to-br from-blue-600 to-indigo-600'} rounded-xl flex items-center justify-center shrink-0`}>
+                                    <div className={`w-12 h-12 md:w-14 md:h-14 ${member.isOwner ? 'bg-linear-to-br from-amber-500 to-orange-500' : 'bg-linear-to-br from-blue-600 to-indigo-600'} rounded-xl flex items-center justify-center shrink-0`}>
                                         <span className="text-xl font-bold text-white">{getInitials(member.name)}</span>
                                     </div>
                                     <div className="flex-1 min-w-0">
