@@ -392,11 +392,35 @@ const TaskPage = () => {
                                     ) : (
                                         tasks.filter(task => !task.completed).map(task => {
                                             const isRestricted = task.onlyAuthorCanComplete && task.taskAuthorId != currentUser?.id
+                                            const dueDateInfo = task.dueDate ? formatDueDate(task.dueDate) : null
+
+                                            // Determine hover classes based on due date
+                                            let hoverClasses = ''
+                                            if (dueDateInfo) {
+                                                if (dueDateInfo.color === 'text-red-600') {
+                                                    hoverClasses = 'hover:bg-red-100'
+                                                } else if (dueDateInfo.color === 'text-orange-600') {
+                                                    hoverClasses = 'hover:bg-orange-100'
+                                                } else if (dueDateInfo.color === 'text-yellow-600') {
+                                                    hoverClasses = 'hover:bg-yellow-100'
+                                                } else if (dueDateInfo.color === 'text-blue-600') {
+                                                    hoverClasses = 'hover:bg-blue-100'
+                                                } else {
+                                                    hoverClasses = 'hover:bg-slate-100'
+                                                }
+                                            } else {
+                                                hoverClasses = 'hover:border-blue-300 hover:bg-slate-50'
+                                            }
+
                                             return (
                                                 <div
                                                     key={task.id}
-                                                    className="p-3 sm:p-4 rounded-lg border border-slate-200 hover:border-blue-300 hover:bg-slate-50 transition-all"
+                                                    className={`p-3 sm:p-4 rounded-lg border-2 ${dueDateInfo ? `${dueDateInfo.borderColor} ${dueDateInfo.bgColor}` : 'border-slate-200'} ${hoverClasses} transition-all relative`}
                                                 >
+                                                    {/* Urgent indicator dot */}
+                                                    {dueDateInfo?.urgent && (
+                                                        <div className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                                                    )}
                                                     <div className="flex items-start gap-2 sm:gap-3">
                                                         <div
                                                             className={`mt-0.5 shrink-0 ${isRestricted ? 'cursor-not-allowed' : 'cursor-pointer'}`}
@@ -445,8 +469,8 @@ const TaskPage = () => {
                                                                 <span className="truncate">{formatDate(task.createdAt)}</span>
                                                             </div>
                                                             {task.dueDate && (
-                                                                <div className={`flex items-center gap-1 mt-1.5 sm:mt-2 px-2 py-1 rounded text-[10px] sm:text-xs font-medium ${formatDueDate(task.dueDate).bgColor} ${formatDueDate(task.dueDate).color}`}>
-                                                                    <Calendar className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                                                                <div className={`flex items-center gap-1 mt-1.5 sm:mt-2 px-2 py-1 rounded text-[10px] sm:text-xs font-medium ${formatDueDate(task.dueDate).color}`}>
+                                                                    <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                                                                     <span>{formatDueDate(task.dueDate).text}</span>
                                                                 </div>
                                                             )}
@@ -473,10 +497,11 @@ const TaskPage = () => {
                                     ) : (
                                         tasks.filter(task => task.completed).map(task => {
                                             const isRestricted = task.onlyAuthorCanComplete && task.taskAuthorId != currentUser?.id
+
                                             return (
                                                 <div
                                                     key={task.id}
-                                                    className="p-3 sm:p-4 rounded-lg border border-slate-200 hover:border-green-300 hover:bg-slate-50 transition-all"
+                                                    className="p-3 sm:p-4 rounded-lg border-2 border-green-200 bg-green-50 hover:bg-green-100 transition-all"
                                                 >
                                                     <div className="flex items-start gap-2 sm:gap-3">
                                                         <div
@@ -535,8 +560,8 @@ const TaskPage = () => {
                                                                     <span className="truncate">{formatDate(task.completionDate)}</span>
                                                                 </div>
                                                                 {task.dueDate && (
-                                                                    <div className="flex items-center gap-1 px-2 py-1 rounded text-[10px] sm:text-xs font-medium bg-slate-100 text-slate-500">
-                                                                        <Calendar className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                                                                    <div className="flex items-center gap-1 text-[10px] sm:text-xs font-medium text-green-600">
+                                                                        <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                                                                         <span>Was due: {formatDate(task.dueDate)}</span>
                                                                     </div>
                                                                 )}
