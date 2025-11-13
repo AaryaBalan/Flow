@@ -11,6 +11,7 @@ const HomePage = () => {
     const [projects, setProjects] = useState([])
     const [recentActivities, setRecentActivities] = useState([])
     const [upcomingTasks, setUpcomingTasks] = useState([])
+    const [showAllTasks, setShowAllTasks] = useState(false)
     const [stats, setStats] = useState({
         totalProjects: 0,
         totalTasks: 0,
@@ -320,46 +321,69 @@ const HomePage = () => {
                         <p className="text-xs mt-1">Tasks with due dates will appear here</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
-                        {upcomingTasks.map(task => {
-                            const dueDateInfo = formatDueDate(task.dueDate)
-                            return (
-                                <div
-                                    key={task.id}
-                                    onClick={() => navigate(`/project/${task.projectId}/task`)}
-                                    className={`p-3 sm:p-4 rounded-lg border-2 ${dueDateInfo.borderColor} ${dueDateInfo.bgColor} hover:shadow-md transition-all cursor-pointer ${dueDateInfo.urgent ? 'ring-2 ring-offset-2 ring-red-200' : ''}`}
-                                >
-                                    <div className="flex items-start justify-between gap-2 mb-2">
-                                        <div className={`px-2 py-1 rounded text-xs font-bold ${dueDateInfo.bgColor} ${dueDateInfo.color}`}>
-                                            {formatShortDate(task.dueDate)}
+                    <div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+                            {(showAllTasks ? upcomingTasks : upcomingTasks.slice(0, 5)).map(task => {
+                                const dueDateInfo = formatDueDate(task.dueDate)
+                                return (
+                                    <div
+                                        key={task.id}
+                                        onClick={() => navigate(`/project/${task.projectId}/task`)}
+                                        className={`p-3 sm:p-4 rounded-lg border-2 ${dueDateInfo.borderColor} ${dueDateInfo.bgColor} hover:shadow-md transition-all cursor-pointer ${dueDateInfo.urgent ? 'ring-2 ring-offset-2 ring-red-200' : ''}`}
+                                    >
+                                        <div className="flex items-start justify-between gap-2 mb-2">
+                                            <div className={`px-2 py-1 rounded text-xs font-bold ${dueDateInfo.bgColor} ${dueDateInfo.color}`}>
+                                                {formatShortDate(task.dueDate)}
+                                            </div>
+                                            {dueDateInfo.urgent && (
+                                                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                                            )}
                                         </div>
-                                        {dueDateInfo.urgent && (
-                                            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                                        )}
-                                    </div>
 
-                                    <h3 className="font-semibold text-slate-800 text-sm mb-1 line-clamp-2">
-                                        {task.title}
-                                    </h3>
+                                        <h3 className="font-semibold text-slate-800 text-sm mb-1 line-clamp-2">
+                                            {task.title}
+                                        </h3>
 
-                                    <p className="text-xs text-slate-600 mb-2 truncate">
-                                        {task.projectTitle}
-                                    </p>
-
-                                    {task.description && (
-                                        <p className="text-xs text-slate-500 mt-2 line-clamp-2">
-                                            {task.description}
+                                        <p className="text-xs text-slate-600 mb-2 truncate">
+                                            {task.projectTitle}
                                         </p>
-                                    )}
 
-                                    <div className={`mt-2 flex items-center gap-1 text-xs font-medium ${dueDateInfo.color}`}>
-                                        <Clock className="w-3 h-3" />
-                                        <span>{dueDateInfo.text}</span>
+                                        {task.description && (
+                                            <p className="text-xs text-slate-500 mt-2 line-clamp-2">
+                                                {task.description}
+                                            </p>
+                                        )}
+
+                                        <div className={`mt-2 flex items-center gap-1 text-xs font-medium ${dueDateInfo.color}`}>
+                                            <Clock className="w-3 h-3" />
+                                            <span>{dueDateInfo.text}</span>
+                                        </div>
                                     </div>
+                                )
+                            })}
+                        </div>
 
-                                </div>
-                            )
-                        })}
+                        {!showAllTasks && upcomingTasks.length > 5 && (
+                            <div className="mt-4 flex justify-center">
+                                <button
+                                    onClick={() => setShowAllTasks(true)}
+                                    className="px-6 py-2 text-sm sm:text-base font-semibold text-indigo-600 hover:text-indigo-700 border-2 border-indigo-200 hover:border-indigo-300 rounded-lg transition-all"
+                                >
+                                    Show More ({upcomingTasks.length - 5} more)
+                                </button>
+                            </div>
+                        )}
+
+                        {showAllTasks && upcomingTasks.length > 5 && (
+                            <div className="mt-4 flex justify-center">
+                                <button
+                                    onClick={() => setShowAllTasks(false)}
+                                    className="px-6 py-2 text-sm sm:text-base font-semibold text-slate-600 hover:text-slate-700 border-2 border-slate-300 hover:border-slate-400 rounded-lg transition-all"
+                                >
+                                    Show Less
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
