@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { TrendingUp, Users, CheckCircle, Clock, ListTodo, UserCheck, MessageSquare, UserPlus, PlusCircle } from 'lucide-react'
+import { TrendingUp, Users, CheckCircle, Clock, ListTodo, UserCheck, MessageSquare, UserPlus, PlusCircle, FileText } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
 import axios from 'axios'
 import toast from 'react-hot-toast'
@@ -10,14 +10,29 @@ const StatsPage = () => {
     const { projectId } = useParams()
     const [tasks, setTasks] = useState([])
     const [members, setMembers] = useState([])
+    const [notes, setNotes] = useState([])
     const [recentActivity, setRecentActivity] = useState([])
     const [isLoading, setIsLoading] = useState(true)
+    const [currentUser, setCurrentUser] = useState(null)
+
+    // Load current user from localStorage so we can fetch notes (API requires userId)
+    useEffect(() => {
+        const userStr = localStorage.getItem('user')
+        if (userStr) {
+            try {
+                const userData = JSON.parse(userStr)
+                setCurrentUser(userData)
+            } catch (err) {
+                console.error('Error parsing user from localStorage', err)
+            }
+        }
+    }, [])
 
     useEffect(() => {
-        if (projectId) {
+        if (projectId && currentUser) {
             fetchProjectData()
         }
-    }, [projectId])
+    }, [projectId, currentUser])
 
     const fetchProjectData = async () => {
         try {
@@ -34,9 +49,22 @@ const StatsPage = () => {
                 setMembers(membersResponse.data.members)
             }
 
-            // TODO: Fetch recent activity from backend
-            // For now, we'll generate mock activity based on tasks and members
-            generateRecentActivity(tasksResponse.data.tasks || [], membersResponse.data.members || [])
+            // Fetch notes for project (requires userId query param)
+            let notesResponse = null
+            if (currentUser) {
+                try {
+                    notesResponse = await axios.get(`${API_BASE_URL}/api/notes/project/${projectId}?userId=${currentUser.id}`)
+                    if (notesResponse.data.success) {
+                        setNotes(notesResponse.data.notes || [])
+                    }
+                } catch (err) {
+                    console.error('Error fetching notes:', err)
+                }
+            }
+
+            // Generate recent activity based on tasks, members and notes
+            const notesListForActivity = notesResponse && notesResponse.data && notesResponse.data.notes ? notesResponse.data.notes : []
+            generateRecentActivity(tasksResponse.data.tasks || [], membersResponse.data.members || [], notesListForActivity)
         } catch (error) {
             console.error('Error fetching project data:', error)
             toast.error('Failed to load project statistics')
@@ -45,7 +73,7 @@ const StatsPage = () => {
         }
     }
 
-    const generateRecentActivity = (tasksList, membersList) => {
+    const generateRecentActivity = (tasksList, membersList, notesList = []) => {
         const activities = []
 
         // Add task activities
@@ -86,6 +114,22 @@ const StatsPage = () => {
                 timestamp: new Date(member.joinedAt).getTime(),
                 icon: UserPlus,
                 color: 'purple'
+            })
+        })
+
+        // Add note activities
+        notesList.slice(0, 5).forEach(note => {
+            const authorName = note.createdByName || note.createdBy || 'Unknown'
+            const when = note.updatedAt || note.createdAt
+            activities.push({
+                id: `note-${note.id}`,
+                user: authorName,
+                action: 'created note',
+                target: note.title,
+                time: formatTimeAgo(when),
+                timestamp: when ? new Date(when).getTime() : Date.now(),
+                icon: FileText,
+                color: 'orange'
             })
         })
 
@@ -191,6 +235,28 @@ const StatsPage = () => {
         color: data.color
     }))
 
+    // Notes statistics
+    const totalNotes = notes.length
+    const notesPerMember = {}
+    notes.forEach(note => {
+        const authorId = note.createdBy
+        const authorName = note.createdByName || note.createdBy || 'Unknown'
+        if (!notesPerMember[authorId]) {
+            notesPerMember[authorId] = { name: authorName, count: 0, color: '' }
+        }
+        notesPerMember[authorId].count++
+    })
+
+    Object.keys(notesPerMember).forEach((memberId, index) => {
+        notesPerMember[memberId].color = memberColors[index % memberColors.length]
+    })
+
+    const memberNotesData = Object.entries(notesPerMember).map(([id, data]) => ({
+        name: data.name,
+        value: data.count,
+        color: data.color
+    }))
+
     // Custom label for pie chart center
     const renderCustomLabel = (total) => {
         return (props) => {
@@ -204,7 +270,7 @@ const StatsPage = () => {
             return (
                 <div className="bg-white px-4 py-2 rounded-lg shadow-2xl border-2 border-slate-300" style={{ zIndex: 9999, position: 'relative' }}>
                     <p className="text-sm font-semibold text-slate-800">{payload[0].name}</p>
-                    <p className="text-sm text-slate-600">{payload[0].value} tasks</p>
+                    <p className="text-sm text-slate-600">{payload[0].value} items</p>
                 </div>
             )
         }
@@ -227,7 +293,7 @@ const StatsPage = () => {
             </div>
 
             {/* Quick Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                 <div className="flex flex-col justify-center items-center bg-white rounded-xl shadow-sm p-4 md:p-6 hover:shadow-md transition-shadow">
                     <div className="flex items-center justify-between mb-3 md:mb-4">
                         <div className="w-10 h-10 md:w-12 md:h-12 bg-linear-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
@@ -267,10 +333,21 @@ const StatsPage = () => {
                     <div className="text-2xl md:text-3xl font-bold text-slate-800 mb-1">{members.length}</div>
                     <div className="text-xs md:text-sm text-slate-600">Team Members</div>
                 </div>
+
+                <div className="flex flex-col justify-center items-center bg-white rounded-xl shadow-sm p-4 md:p-6 hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between mb-3 md:mb-4">
+                        <div className="w-10 h-10 md:w-12 md:h-12 bg-linear-to-br from-indigo-600 to-indigo-700 rounded-lg flex items-center justify-center">
+                            <FileText className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                        </div>
+                    </div>
+                    <div className="text-2xl md:text-3xl font-bold text-slate-800 mb-1">{totalNotes}</div>
+                    <div className="text-xs md:text-sm text-slate-600">Notes</div>
+                </div>
+
             </div>
 
             {/* Pie Charts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6 items-start">
                 {/* Task Status Distribution */}
                 <div className="bg-white rounded-xl shadow-sm p-4 md:p-6">
                     <h3 className="text-lg md:text-xl font-bold text-slate-800 mb-4 md:mb-6">Task Status Distribution</h3>
@@ -449,6 +526,66 @@ const StatsPage = () => {
                             <div className="text-center py-8 text-slate-400">
                                 <CheckCircle className="w-12 h-12 mx-auto mb-2 opacity-30" />
                                 <p>No completed tasks yet</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+                {/* Notes Created Per Member */}
+                <div className="bg-white rounded-xl shadow-sm p-4 md:p-6">
+                    <h3 className="text-lg md:text-xl font-bold text-slate-800 mb-4 md:mb-6">Notes Created</h3>
+                    <div className="flex flex-col items-center">
+                        {memberNotesData.length > 0 ? (
+                            <>
+                                <div className="relative w-full h-48 md:h-64" style={{ zIndex: 1 }}>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            <Pie
+                                                data={memberNotesData}
+                                                cx="50%"
+                                                cy="50%"
+                                                innerRadius={45}
+                                                outerRadius={70}
+                                                paddingAngle={2}
+                                                dataKey="value"
+                                            >
+                                                {memberNotesData.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip content={<CustomTooltip />} wrapperStyle={{ zIndex: 9999 }} />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 1 }}>
+                                        <div className="text-center">
+                                            <p className="text-2xl md:text-3xl font-bold text-slate-800">{totalNotes}</p>
+                                            <p className="text-xs text-slate-500">Total</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="w-full space-y-2 md:space-y-3 mt-4 max-h-48 md:max-h-64 overflow-y-auto">
+                                    {memberNotesData.map((item, index) => (
+                                        <div key={index} className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <div
+                                                    className="w-3 h-3 md:w-4 md:h-4 rounded"
+                                                    style={{ backgroundColor: item.color }}
+                                                />
+                                                <span className="text-xs md:text-sm text-slate-700 truncate max-w-[120px] md:max-w-[150px]">{item.name}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs md:text-sm font-semibold text-slate-800">{item.value}</span>
+                                                <span className="text-xs text-slate-500">
+                                                    ({totalNotes > 0 ? Math.round((item.value / totalNotes) * 100) : 0}%)
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        ) : (
+                            <div className="text-center py-8 text-slate-400">
+                                <FileText className="w-12 h-12 mx-auto mb-2 opacity-30" />
+                                <p>No notes yet</p>
                             </div>
                         )}
                     </div>
