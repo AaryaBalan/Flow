@@ -23,6 +23,9 @@ const AIPage = () => {
     const [chatPrompt, setChatPrompt] = useState('')
     const [chatGenerateKey, setChatGenerateKey] = useState(0)
     const [waitingForResponse, setWaitingForResponse] = useState(false)
+    const [projectMembers, setProjectMembers] = useState([])
+    const [projectTasks, setProjectTasks] = useState([])
+    const [projectNotes, setProjectNotes] = useState([])
     const chatEndRef = useRef(null)
 
     // Load current user
@@ -41,6 +44,13 @@ const AIPage = () => {
     useEffect(() => {
         fetchProjectData()
     }, [projectId])
+
+    // Fetch additional project context when project data is loaded
+    useEffect(() => {
+        if (projectData) {
+            fetchProjectContext()
+        }
+    }, [projectData])
 
     // Fetch chat messages when user and project are loaded
     useEffect(() => {
@@ -110,6 +120,26 @@ const AIPage = () => {
             console.error('Error fetching project data:', error)
         } finally {
             setLoading(false)
+        }
+    }
+
+    const fetchProjectContext = async () => {
+        if (!projectData) return
+
+        try {
+            // Fetch team members
+            const membersResponse = await axios.get(`${API_BASE_URL}/api/projects/${projectId}/members`)
+            setProjectMembers(membersResponse.data.members || [])
+
+            // Fetch tasks
+            const tasksResponse = await axios.get(`${API_BASE_URL}/api/tasks/project/${projectId}`)
+            setProjectTasks(tasksResponse.data.tasks || [])
+
+            // Fetch notes
+            const notesResponse = await axios.get(`${API_BASE_URL}/api/notes/project/${projectId}`)
+            setProjectNotes(notesResponse.data.notes || [])
+        } catch (error) {
+            console.error('Error fetching project context:', error)
         }
     }
 
@@ -268,9 +298,25 @@ Make each recommendation practical and directly related to the project details p
             }
 
             // Set up the AI prompt for chat
-            const contextPrompt = projectData
-                ? `Context: User is working on project "${projectData.title}" - ${projectData.description}\n\nUser question: ${message}\n\nPlease provide a helpful, concise response.`
-                : `User question: ${message}\n\nPlease provide a helpful, concise response.`
+            const contextPrompt = projectData ? `
+Project Context:
+Title: ${projectData.title}
+Description: ${projectData.description}
+Created: ${new Date(projectData.createdAt).toLocaleDateString()}
+Author: ${projectData.authorName || 'Unknown'}
+
+Team Members (${projectMembers.length}):
+${projectMembers.map(member => `- ${member.name} (${member.email}) - ${member.designation || 'No designation'}${member.isOwner ? ' [Owner]' : ''}`).join('\n')}
+
+Tasks (${projectTasks.length} total):
+${projectTasks.length > 0 ? projectTasks.map(task => `- ${task.title}: ${task.description} [${task.completed ? 'Completed' : 'Pending'}]`).join('\n') : 'No tasks yet'}
+
+Notes (${projectNotes.length} total):
+${projectNotes.length > 0 ? projectNotes.map(note => `- ${note.title}: ${note.content.substring(0, 100)}${note.content.length > 100 ? '...' : ''}`).join('\n') : 'No notes yet'}
+
+User question: ${message}
+
+Please provide a helpful, concise response based on the project context above.` : `User question: ${message}\n\nPlease provide a helpful, concise response.`
 
             setChatPrompt(contextPrompt)
             setChatGenerateKey(prev => prev + 1)
@@ -292,8 +338,8 @@ Make each recommendation practical and directly related to the project details p
     }
 
     return (
-        <div className="flex flex-col min-h-[calc(100vh-130px)]">
-            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4 px-2 sm:px-0">
+        <div className="flex flex-col h-[calc(100vh-130px)] max-h-[calc(100vh-130px)]">
+            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4 px-2 sm:px-0 shrink-0">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-teal-600 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0">
                     <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
@@ -304,7 +350,7 @@ Make each recommendation practical and directly related to the project details p
             </div>
 
             {/* Tab Navigation */}
-            <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-1.5 sm:p-2 flex gap-1 sm:gap-2 mb-3 sm:mb-4">
+            <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-1.5 sm:p-2 flex gap-1 sm:gap-2 mb-3 sm:mb-4 shrink-0">
                 <button
                     onClick={() => setActiveTab('chat')}
                     className={`flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-md sm:rounded-lg font-medium transition-all text-xs sm:text-base flex-1 sm:flex-initial ${activeTab === 'chat'
@@ -334,7 +380,7 @@ Make each recommendation practical and directly related to the project details p
 
             {/* Chat Tab */}
             {activeTab === 'chat' && (
-                <div className="bg-slate-50 rounded-lg sm:rounded-xl overflow-hidden flex flex-col flex-1">
+                <div className="bg-slate-50 rounded-lg sm:rounded-xl overflow-hidden flex flex-col flex-1 min-h-0">
                     {/* Hidden AI Component for chat */}
                     {waitingForResponse && chatPrompt && (
                         <AiComponent
@@ -345,7 +391,7 @@ Make each recommendation practical and directly related to the project details p
                     )}
 
                     {/* Chat Header */}
-                    <div className="bg-white border-b border-slate-200 px-3 sm:px-6 py-3 sm:py-4">
+                    <div className="bg-white border-b border-slate-200 px-3 sm:px-6 py-3 sm:py-4 shrink-0">
                         <div className="flex items-center gap-2 sm:gap-3">
                             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-teal-600 rounded-full flex items-center justify-center shrink-0">
                                 <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
@@ -358,7 +404,7 @@ Make each recommendation practical and directly related to the project details p
                     </div>
 
                     {/* Chat Messages - Scrollable Area */}
-                    <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-3 sm:py-4">
+                    <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-3 sm:py-4 min-h-0">
                         {loadingMessages ? (
                             <div className="flex items-center justify-center h-full">
                                 <Loader className="w-6 h-6 sm:w-8 sm:h-8 text-teal-600 animate-spin" />
@@ -372,7 +418,7 @@ Make each recommendation practical and directly related to the project details p
                     </div>
 
                     {/* Input Form - Fixed at Bottom */}
-                    <div className="bg-white border-t border-slate-200 p-2 sm:p-4">
+                    <div className="bg-white border-t border-slate-200 p-2 sm:p-4 shrink-0">
                         <form onSubmit={handleSubmit} className="flex gap-2 sm:gap-3">
                             <input
                                 type="text"
@@ -397,7 +443,7 @@ Make each recommendation practical and directly related to the project details p
 
             {/* Recommendations Tab */}
             {activeTab === 'recommendations' && (
-                <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-3 sm:p-6 flex-1 overflow-y-auto">
+                <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-3 sm:p-6 flex-1 overflow-y-auto min-h-0">
                     {/* Hidden AI Component for fetching */}
                     {shouldGenerateRecs && aiPrompt && (
                         <AiComponent
