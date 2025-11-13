@@ -6,9 +6,48 @@ const AiChatOutput = ({ messages }) => {
     const [copiedId, setCopiedId] = useState(null)
 
     const copyToClipboard = (text, id) => {
-        navigator.clipboard.writeText(text)
-        setCopiedId(id)
-        setTimeout(() => setCopiedId(null), 2000)
+        try {
+            // Try modern clipboard API first
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text)
+                    .then(() => {
+                        setCopiedId(id)
+                        setTimeout(() => setCopiedId(null), 2000)
+                    })
+                    .catch(() => {
+                        fallbackCopy(text, id)
+                    })
+            } else {
+                fallbackCopy(text, id)
+            }
+        } catch (error) {
+            fallbackCopy(text, id)
+        }
+    }
+
+    const fallbackCopy = (text, id) => {
+        // Fallback for non-secure contexts
+        const textArea = document.createElement('textarea')
+        textArea.value = text
+        textArea.style.position = 'fixed'
+        textArea.style.left = '-999999px'
+        textArea.style.top = '-999999px'
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+
+        try {
+            const successful = document.execCommand('copy')
+            textArea.remove()
+
+            if (successful) {
+                setCopiedId(id)
+                setTimeout(() => setCopiedId(null), 2000)
+            }
+        } catch (err) {
+            textArea.remove()
+            console.error('Failed to copy:', err)
+        }
     }
 
     const formatMessage = (text) => {
@@ -136,8 +175,8 @@ const AiChatOutput = ({ messages }) => {
 
                         <div
                             className={`rounded-md px-4 py-2.5 ${msg.type === 'ai'
-                                    ? 'bg-white border border-slate-200'
-                                    : 'bg-emerald-600 text-white'
+                                ? 'bg-white border border-slate-200'
+                                : 'bg-emerald-600 text-white'
                                 }`}
                         >
                             {msg.type === 'ai' ? (

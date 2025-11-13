@@ -313,7 +313,7 @@ const ChatPage = () => {
                                                         </div>
                                                     )}
 
-                                                    <div className={`max-w-[85%] sm:max-w-[70%] ${isCurrentUser ? 'text-right' : ''}`}>
+                                                    <div className={`max-w-[85%] sm:max-w-[70%]`}>
                                                         {!isCurrentUser && (
                                                             <p className="text-xs sm:text-sm font-semibold text-slate-700 mb-1">{msg.senderName}</p>
                                                         )}
@@ -328,20 +328,20 @@ const ChatPage = () => {
                                                             )}
 
                                                             {/* Message Content */}
-                                                            <p className={`text-sm sm:text-base wrap-break-word ${isCurrentUser ? 'text-white' : 'text-slate-700'}`}>
+                                                            <p className={`text-sm sm:text-base wrap-break-word text-left ${isCurrentUser ? 'text-white' : 'text-slate-700'}`}>
                                                                 {msg.messageContent}
                                                             </p>
 
                                                             {/* Edit indicator */}
                                                             {msg.editedAt && (
-                                                                <p className={`text-xs mt-1 ${isCurrentUser ? 'text-blue-200' : 'text-slate-500'}`}>
+                                                                <p className={`text-xs mt-1 text-left ${isCurrentUser ? 'text-blue-200' : 'text-slate-500'}`}>
                                                                     (edited)
                                                                 </p>
                                                             )}
                                                         </div>
 
                                                         {/* Message Actions */}
-                                                        <div className="flex items-center gap-2 mt-1">
+                                                        <div className={`flex items-center gap-2 mt-1 ${isCurrentUser ? 'justify-end' : ''}`}>
                                                             <p className="text-xs text-slate-500">{formatTime(msg.createdAt)}</p>
 
                                                             {!isCurrentUser && (

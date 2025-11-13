@@ -2,7 +2,7 @@ const db = require('../database/initDb');
 
 // Create a new task
 exports.createTask = (req, res) => {
-    const { projectId, title, description, taskAuthor, taskAuthorId, onlyAuthorCanComplete } = req.body;
+    const { projectId, title, description, taskAuthor, taskAuthorId, onlyAuthorCanComplete, dueDate } = req.body;
 
     if (!projectId || !title || !taskAuthor || !taskAuthorId) {
         return res.status(400).json({
@@ -20,16 +20,17 @@ exports.createTask = (req, res) => {
             taskAuthorId, 
             createdBy, 
             createdById, 
-            onlyAuthorCanComplete
+            onlyAuthorCanComplete,
+            dueDate
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const onlyAuthor = onlyAuthorCanComplete ? 1 : 0;
 
     db.run(
         query,
-        [projectId, title, description || null, taskAuthor, taskAuthorId, taskAuthor, taskAuthorId, onlyAuthor],
+        [projectId, title, description || null, taskAuthor, taskAuthorId, taskAuthor, taskAuthorId, onlyAuthor, dueDate || null],
         function (err) {
             if (err) {
                 console.error('Error creating task:', err.message);

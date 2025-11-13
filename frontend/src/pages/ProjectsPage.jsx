@@ -119,12 +119,44 @@ const ProjectsPage = () => {
 
     const handleCopyCode = async (code, codeId) => {
         try {
-            await navigator.clipboard.writeText(code)
-            setCopiedCodeId(codeId)
-            toast.success('Join code copied to clipboard!')
-            setTimeout(() => setCopiedCodeId(null), 2000)
+            // Try modern clipboard API first
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(code)
+                setCopiedCodeId(codeId)
+                toast.success('Join code copied to clipboard!')
+                setTimeout(() => setCopiedCodeId(null), 2000)
+            } else {
+                // Fallback for non-secure contexts (like network IP)
+                const textArea = document.createElement('textarea')
+                textArea.value = code
+                textArea.style.position = 'fixed'
+                textArea.style.left = '-999999px'
+                textArea.style.top = '-999999px'
+                document.body.appendChild(textArea)
+                textArea.focus()
+                textArea.select()
+
+                try {
+                    const successful = document.execCommand('copy')
+                    textArea.remove()
+
+                    if (successful) {
+                        setCopiedCodeId(codeId)
+                        toast.success('Join code copied to clipboard!')
+                        setTimeout(() => setCopiedCodeId(null), 2000)
+                    } else {
+                        throw new Error('Copy command failed')
+                    }
+                } catch (err) {
+                    textArea.remove()
+                    // Show the code in a prompt as last resort
+                    toast.info(`Join Code: ${code}`, { duration: 5000 })
+                }
+            }
         } catch (error) {
-            toast.error('Failed to copy join code')
+            console.error('Copy error:', error)
+            // Show the code in a toast as fallback
+            toast.info(`Join Code: ${code}`, { duration: 5000 })
         }
     }
 

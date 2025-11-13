@@ -147,6 +147,7 @@ function initializeTables() {
                 completedById INTEGER,
                 completionDate DATETIME,
                 onlyAuthorCanComplete INTEGER DEFAULT 0,
+                dueDate DATETIME,
                 createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (projectId) REFERENCES Projects(id) ON DELETE CASCADE,
                 FOREIGN KEY (taskAuthorId) REFERENCES Users(id) ON DELETE CASCADE,
@@ -159,12 +160,20 @@ function initializeTables() {
             } else {
                 console.log('Tasks table ready');
 
-                // Add description column to existing table if it doesn't exist
+                // Add columns to existing table if they don't exist
                 db.run(`
                     ALTER TABLE Tasks ADD COLUMN description TEXT
                 `, (alterErr) => {
                     if (alterErr && !alterErr.message.includes('duplicate column')) {
                         console.error('Error adding description column:', alterErr.message);
+                    }
+                });
+
+                db.run(`
+                    ALTER TABLE Tasks ADD COLUMN dueDate DATETIME
+                `, (alterErr) => {
+                    if (alterErr && !alterErr.message.includes('duplicate column')) {
+                        console.error('Error adding dueDate column:', alterErr.message);
                     }
                 });
             }
