@@ -45,12 +45,12 @@ const AIPage = () => {
         fetchProjectData()
     }, [projectId])
 
-    // Fetch additional project context when project data is loaded
+    // Fetch additional project context when project data and user are loaded
     useEffect(() => {
-        if (projectData) {
+        if (projectData && currentUser) {
             fetchProjectContext()
         }
-    }, [projectData])
+    }, [projectData, currentUser])
 
     // Fetch chat messages when user and project are loaded
     useEffect(() => {
@@ -124,7 +124,7 @@ const AIPage = () => {
     }
 
     const fetchProjectContext = async () => {
-        if (!projectData) return
+        if (!projectData || !currentUser) return
 
         try {
             // Fetch team members
@@ -136,7 +136,7 @@ const AIPage = () => {
             setProjectTasks(tasksResponse.data.tasks || [])
 
             // Fetch notes
-            const notesResponse = await axios.get(`${API_BASE_URL}/api/notes/project/${projectId}`)
+            const notesResponse = await axios.get(`${API_BASE_URL}/api/notes/project/${projectId}?userId=${currentUser.id}`)
             setProjectNotes(notesResponse.data.notes || [])
         } catch (error) {
             console.error('Error fetching project context:', error)
@@ -337,6 +337,112 @@ Please provide a helpful, concise response based on the project context above.` 
         return colors[color] || colors.blue
     }
 
+    const handleSaveAsNote = async (aiContent) => {
+        if (!currentUser || !projectId) {
+            console.error('Missing user or project information')
+            return
+        }
+
+        try {
+            // Generate a title from the AI content
+            let title = 'AI Generated Note'
+            const firstLine = aiContent.split('\n')[0].trim()
+
+            if (firstLine && firstLine.length > 0) {
+                // Remove markdown formatting and limit to 60 characters
+                title = firstLine
+                    .replace(/^#+\s*/, '') // Remove markdown headers
+                    .replace(/\*\*/g, '') // Remove bold
+                    .replace(/\*/g, '') // Remove italic
+                    .replace(/`/g, '') // Remove code markers
+                    .substring(0, 60)
+                    .trim()
+
+                if (title.endsWith('.') || title.endsWith(',')) {
+                    title = title.slice(0, -1)
+                }
+            }
+
+            // Convert markdown/plain text from AI into safe HTML for storage and display
+            const markdownToHtml = (md) => {
+                if (!md) return ''
+
+                // Escape HTML
+                const escapeHtml = (str) => str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+                // Handle fenced code blocks first
+                let out = md
+                // Replace CRLF with LF for consistency
+                out = out.replace(/\r\n?/g, '\n')
+
+                // Extract fenced code blocks and replace with placeholders
+                const codeBlocks = []
+                out = out.replace(/```([\s\S]*?)```/g, (match, code) => {
+                    const idx = codeBlocks.length
+                    codeBlocks.push(escapeHtml(code))
+                    return `{{CODE_BLOCK_${idx}}}`
+                })
+
+                // Convert headings
+                out = out.replace(/^###\s*(.+)$/gim, '<h3>$1</h3>')
+                out = out.replace(/^##\s*(.+)$/gim, '<h2>$1</h2>')
+                out = out.replace(/^#\s*(.+)$/gim, '<h1>$1</h1>')
+
+                // Convert unordered lists
+                out = out.replace(/(^|\n)([\*-]\s.+(?:\n[\*-]\s.+)*)/g, (m, p1, list) => {
+                    const items = list.split(/\n/).map(l => '<li>' + l.replace(/^[\*-]\s?/, '') + '</li>').join('')
+                    return p1 + `<ul>${items}</ul>`
+                })
+
+                // Convert ordered lists
+                out = out.replace(/(^|\n)((?:\d+\.\s.+\n?)+)/g, (m, p1, list) => {
+                    const items = list.trim().split(/\n/).map(l => '<li>' + l.replace(/^\d+\.\s?/, '') + '</li>').join('')
+                    return p1 + `<ol>${items}</ol>`
+                })
+
+                // Inline formatting: bold and italic and inline code
+                out = out.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                out = out.replace(/\*(.+?)\*/g, '<em>$1</em>')
+                out = out.replace(/`([^`]+?)`/g, '<code>$1</code>')
+
+                // Paragraphs: split on double newlines
+                const paragraphs = out.split(/\n{2,}/).map(para => {
+                    // Skip if already block element
+                    if (/^\s*<(h[1-6]|ul|ol|pre|blockquote)/i.test(para)) return para
+                    // Replace single newlines with <br>
+                    const withBr = para.replace(/\n/g, '<br/>')
+                    return `<p>${withBr}</p>`
+                })
+                out = paragraphs.join('\n')
+
+                // Restore code blocks
+                out = out.replace(/\{\{CODE_BLOCK_(\d+)\}\}/g, (m, idx) => ` <pre><code>${codeBlocks[Number(idx)]}</code></pre>`)
+
+                return out
+            }
+
+            const htmlContent = markdownToHtml(aiContent)
+
+            const response = await axios.post(`${API_BASE_URL}/api/notes/create`, {
+                projectId: parseInt(projectId),
+                title: title,
+                content: htmlContent,
+                userId: currentUser.id,
+                userName: currentUser.name || currentUser.email?.split('@')[0] || 'User'
+            })
+
+            if (response.data.success || response.data.note) {
+                // Update the project notes list
+                const newNote = response.data.note || response.data
+                setProjectNotes(prev => [...prev, newNote])
+                console.log('Note saved successfully:', title)
+            }
+        } catch (error) {
+            console.error('Error saving note:', error)
+            throw error
+        }
+    }
+
     return (
         <div className="flex flex-col h-[calc(100vh-130px)] max-h-[calc(100vh-130px)]">
             <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4 px-2 sm:px-0 shrink-0">
@@ -411,7 +517,7 @@ Please provide a helpful, concise response based on the project context above.` 
                             </div>
                         ) : (
                             <>
-                                <AiChatOutput messages={messages} />
+                                <AiChatOutput messages={messages} onSaveAsNote={handleSaveAsNote} />
                                 <div ref={chatEndRef} />
                             </>
                         )}

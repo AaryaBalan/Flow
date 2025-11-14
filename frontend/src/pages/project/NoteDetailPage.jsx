@@ -453,7 +453,7 @@ const NoteDetailPage = () => {
 
             <Toaster position="bottom-right" />
 
-            <style jsx>{`
+            <style>{`
                 .ql-editor a {
                     color: #2563eb !important;
                     text-decoration: underline !important;

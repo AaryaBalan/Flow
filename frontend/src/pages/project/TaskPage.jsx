@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { Plus, CheckCircle, Circle, X, User, Lock, LockOpen, Trash2, RefreshCw, Calendar, Clock } from 'lucide-react'
+import { Plus, CheckCircle, Circle, X, User, Lock, LockOpen, Trash2, RefreshCw, Calendar, Clock, AlertTriangle } from 'lucide-react'
 import axios from 'axios'
 import toast, { Toaster } from 'react-hot-toast';
 import API_BASE_URL from '../../config/api'
@@ -20,6 +20,9 @@ const TaskPage = () => {
     const [isRefreshing, setIsRefreshing] = useState(false)
     const [currentUser, setCurrentUser] = useState(null)
     const [showAllCalendarTasks, setShowAllCalendarTasks] = useState(false)
+    const [showAllOverdue, setShowAllOverdue] = useState(false)
+    const [showAllUpcoming, setShowAllUpcoming] = useState(false)
+    const [showAllPending, setShowAllPending] = useState(false)
 
     // Load current user
     useEffect(() => {
@@ -306,108 +309,11 @@ const TaskPage = () => {
                     </div>
                 ) : (
                     <>
-                        {/* Calendar Planner - Upcoming Tasks */}
-                        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center gap-2">
-                                    <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600" />
-                                    <h2 className="text-lg sm:text-xl font-bold text-slate-800">Calendar Planner</h2>
-                                </div>
-                                {tasks.filter(task => task.dueDate && !task.completed).length > 0 && (
-                                    <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs sm:text-sm font-semibold">
-                                        {tasks.filter(task => task.dueDate && !task.completed).length} upcoming
-                                    </span>
-                                )}
-                            </div>
-
-                            {tasks.filter(task => task.dueDate && !task.completed).length === 0 ? (
-                                <div className="text-center py-8 text-slate-500">
-                                    <Calendar className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                                    <p className="text-sm font-medium">No upcoming deadlines</p>
-                                    <p className="text-xs mt-1">Tasks with due dates will appear here</p>
-                                </div>
-                            ) : (
-                                <div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
-                                        {tasks
-                                            .filter(task => task.dueDate && !task.completed)
-                                            .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
-                                            .slice(0, showAllCalendarTasks ? undefined : 5)
-                                            .map(task => {
-                                                const dueDateInfo = formatDueDate(task.dueDate)
-
-                                                return (
-                                                    <div
-                                                        key={task.id}
-                                                        className={`p-4 rounded-lg border-2 ${dueDateInfo.borderColor} ${dueDateInfo.bgColor} hover:shadow-md transition-all cursor-default`}
-                                                    >
-                                                        {/* Date at top with urgent indicator */}
-                                                        <div className="flex items-center justify-between mb-3">
-                                                            <div className={`text-sm font-bold ${dueDateInfo.color}`}>
-                                                                {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                                            </div>
-                                                            {dueDateInfo.urgent && (
-                                                                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                                                            )}
-                                                        </div>
-
-                                                        {/* Task Title */}
-                                                        <h4 className="font-bold text-slate-800 text-base mb-2 line-clamp-2">
-                                                            {task.title}
-                                                        </h4>
-
-                                                        {/* Created by */}
-                                                        <p className="text-sm text-slate-600 mb-2">
-                                                            {task.taskAuthor}
-                                                        </p>
-
-                                                        {/* Description */}
-                                                        {task.description && (
-                                                            <p className="text-xs text-slate-500 mb-3 line-clamp-2">
-                                                                {task.description}
-                                                            </p>
-                                                        )}
-
-                                                        {/* Due Date Status */}
-                                                        <div className={`flex items-center gap-1 text-xs font-medium ${dueDateInfo.color}`}>
-                                                            <Clock className="w-3 h-3" />
-                                                            <span>{dueDateInfo.text}</span>
-                                                        </div>
-                                                    </div>
-                                                )
-                                            })}
-                                    </div>
-
-                                    {!showAllCalendarTasks && tasks.filter(task => task.dueDate && !task.completed).length > 5 && (
-                                        <div className="mt-4 flex justify-center">
-                                            <button
-                                                onClick={() => setShowAllCalendarTasks(true)}
-                                                className="px-6 py-2 text-sm sm:text-base font-semibold text-indigo-600 hover:text-indigo-700 border-2 border-indigo-200 hover:border-indigo-300 rounded-lg transition-all"
-                                            >
-                                                Show More ({tasks.filter(task => task.dueDate && !task.completed).length - 5} more)
-                                            </button>
-                                        </div>
-                                    )}
-
-                                    {showAllCalendarTasks && tasks.filter(task => task.dueDate && !task.completed).length > 5 && (
-                                        <div className="mt-4 flex justify-center">
-                                            <button
-                                                onClick={() => setShowAllCalendarTasks(false)}
-                                                className="px-6 py-2 text-sm sm:text-base font-semibold text-slate-600 hover:text-slate-700 border-2 border-slate-300 hover:border-slate-400 rounded-lg transition-all"
-                                            >
-                                                Show Less
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-start">
-                            {/* Pending Tasks */}
+                            {/* All Pending Tasks (Interactive) - TODO Section */}
                             <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-4 sm:p-6">
                                 <h3 className="text-base sm:text-lg font-semibold text-slate-800 mb-3 sm:mb-4">
-                                    Pending Tasks ({tasks.filter(task => !task.completed).length})
+                                    All Pending Tasks ({tasks.filter(task => !task.completed).length})
                                 </h3>
                                 <div className="space-y-2.5 sm:space-y-3 min-h-[100px]">
                                     {tasks.filter(task => !task.completed).length === 0 ? (
@@ -600,6 +506,200 @@ const TaskPage = () => {
                                     )}
                                 </div>
                             </div>
+                        </div>
+
+                        {/* Overdue Tasks Section */}
+                        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-2">
+                                    <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
+                                    <h2 className="text-lg sm:text-xl font-bold text-slate-800">Overdue Tasks</h2>
+                                </div>
+                                {tasks.filter(task => task.dueDate && !task.completed && formatDueDate(task.dueDate)?.urgent && new Date(task.dueDate) < new Date()).length > 0 && (
+                                    <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs sm:text-sm font-semibold">
+                                        {tasks.filter(task => task.dueDate && !task.completed && formatDueDate(task.dueDate)?.urgent && new Date(task.dueDate) < new Date()).length} overdue
+                                    </span>
+                                )}
+                            </div>
+
+                            {tasks.filter(task => task.dueDate && !task.completed && formatDueDate(task.dueDate)?.urgent && new Date(task.dueDate) < new Date()).length === 0 ? (
+                                <div className="text-center py-8 text-slate-500">
+                                    <AlertTriangle className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                                    <p className="text-sm font-medium">No overdue tasks</p>
+                                    <p className="text-xs mt-1">Great job staying on track!</p>
+                                </div>
+                            ) : (
+                                <div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                                        {tasks
+                                            .filter(task => task.dueDate && !task.completed && formatDueDate(task.dueDate)?.urgent && new Date(task.dueDate) < new Date())
+                                            .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+                                            .slice(0, showAllOverdue ? undefined : 4)
+                                            .map(task => {
+                                                const dueDateInfo = formatDueDate(task.dueDate)
+
+                                                return (
+                                                    <div
+                                                        key={task.id}
+                                                        className={`p-4 rounded-lg border-2 ${dueDateInfo.borderColor} ${dueDateInfo.bgColor} hover:shadow-md transition-all cursor-default`}
+                                                    >
+                                                        {/* Date at top with urgent indicator */}
+                                                        <div className="flex items-center justify-between mb-3">
+                                                            <div className={`text-sm font-bold ${dueDateInfo.color}`}>
+                                                                {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                                            </div>
+                                                            {dueDateInfo.urgent && (
+                                                                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Task Title */}
+                                                        <h4 className="font-bold text-slate-800 text-base mb-2 line-clamp-2">
+                                                            {task.title}
+                                                        </h4>
+
+                                                        {/* Created by */}
+                                                        <p className="text-sm text-slate-600 mb-2">
+                                                            {task.taskAuthor}
+                                                        </p>
+
+                                                        {/* Description */}
+                                                        {task.description && (
+                                                            <p className="text-xs text-slate-500 mb-3 line-clamp-2">
+                                                                {task.description}
+                                                            </p>
+                                                        )}
+
+                                                        {/* Due Date Status */}
+                                                        <div className={`flex items-center gap-1 text-xs font-medium ${dueDateInfo.color}`}>
+                                                            <Clock className="w-3 h-3" />
+                                                            <span>{dueDateInfo.text}</span>
+                                                        </div>
+                                                    </div>
+                                                )
+                                            })}
+                                    </div>
+
+                                    {!showAllOverdue && tasks.filter(task => task.dueDate && !task.completed && formatDueDate(task.dueDate)?.urgent && new Date(task.dueDate) < new Date()).length > 4 && (
+                                        <div className="mt-4 flex justify-center">
+                                            <button
+                                                onClick={() => setShowAllOverdue(true)}
+                                                className="px-6 py-2 text-sm sm:text-base font-semibold text-red-600 hover:text-red-700 border-2 border-red-200 hover:border-red-300 rounded-lg transition-all"
+                                            >
+                                                Show More ({tasks.filter(task => task.dueDate && !task.completed && formatDueDate(task.dueDate)?.urgent && new Date(task.dueDate) < new Date()).length - 4} more)
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {showAllOverdue && tasks.filter(task => task.dueDate && !task.completed && formatDueDate(task.dueDate)?.urgent && new Date(task.dueDate) < new Date()).length > 4 && (
+                                        <div className="mt-4 flex justify-center">
+                                            <button
+                                                onClick={() => setShowAllOverdue(false)}
+                                                className="px-6 py-2 text-sm sm:text-base font-semibold text-slate-600 hover:text-slate-700 border-2 border-slate-300 hover:border-slate-400 rounded-lg transition-all"
+                                            >
+                                                Show Less
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Upcoming Tasks Section */}
+                        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-2">
+                                    <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                                    <h2 className="text-lg sm:text-xl font-bold text-slate-800">Upcoming Tasks</h2>
+                                </div>
+                                {tasks.filter(task => task.dueDate && !task.completed && new Date(task.dueDate) >= new Date()).length > 0 && (
+                                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs sm:text-sm font-semibold">
+                                        {tasks.filter(task => task.dueDate && !task.completed && new Date(task.dueDate) >= new Date()).length} upcoming
+                                    </span>
+                                )}
+                            </div>
+
+                            {tasks.filter(task => task.dueDate && !task.completed && new Date(task.dueDate) >= new Date()).length === 0 ? (
+                                <div className="text-center py-8 text-slate-500">
+                                    <Calendar className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                                    <p className="text-sm font-medium">No upcoming deadlines</p>
+                                    <p className="text-xs mt-1">Tasks with due dates will appear here</p>
+                                </div>
+                            ) : (
+                                <div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                                        {tasks
+                                            .filter(task => task.dueDate && !task.completed && new Date(task.dueDate) >= new Date())
+                                            .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+                                            .slice(0, showAllUpcoming ? undefined : 4)
+                                            .map(task => {
+                                                const dueDateInfo = formatDueDate(task.dueDate)
+
+                                                return (
+                                                    <div
+                                                        key={task.id}
+                                                        className={`p-4 rounded-lg border-2 ${dueDateInfo.borderColor} ${dueDateInfo.bgColor} hover:shadow-md transition-all cursor-default`}
+                                                    >
+                                                        {/* Date at top with urgent indicator */}
+                                                        <div className="flex items-center justify-between mb-3">
+                                                            <div className={`text-sm font-bold ${dueDateInfo.color}`}>
+                                                                {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                                            </div>
+                                                            {dueDateInfo.urgent && (
+                                                                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Task Title */}
+                                                        <h4 className="font-bold text-slate-800 text-base mb-2 line-clamp-2">
+                                                            {task.title}
+                                                        </h4>
+
+                                                        {/* Created by */}
+                                                        <p className="text-sm text-slate-600 mb-2">
+                                                            {task.taskAuthor}
+                                                        </p>
+
+                                                        {/* Description */}
+                                                        {task.description && (
+                                                            <p className="text-xs text-slate-500 mb-3 line-clamp-2">
+                                                                {task.description}
+                                                            </p>
+                                                        )}
+
+                                                        {/* Due Date Status */}
+                                                        <div className={`flex items-center gap-1 text-xs font-medium ${dueDateInfo.color}`}>
+                                                            <Clock className="w-3 h-3" />
+                                                            <span>{dueDateInfo.text}</span>
+                                                        </div>
+                                                    </div>
+                                                )
+                                            })}
+                                    </div>
+
+                                    {!showAllUpcoming && tasks.filter(task => task.dueDate && !task.completed && new Date(task.dueDate) >= new Date()).length > 4 && (
+                                        <div className="mt-4 flex justify-center">
+                                            <button
+                                                onClick={() => setShowAllUpcoming(true)}
+                                                className="px-6 py-2 text-sm sm:text-base font-semibold text-blue-600 hover:text-blue-700 border-2 border-blue-200 hover:border-blue-300 rounded-lg transition-all"
+                                            >
+                                                Show More ({tasks.filter(task => task.dueDate && !task.completed && new Date(task.dueDate) >= new Date()).length - 4} more)
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {showAllUpcoming && tasks.filter(task => task.dueDate && !task.completed && new Date(task.dueDate) >= new Date()).length > 4 && (
+                                        <div className="mt-4 flex justify-center">
+                                            <button
+                                                onClick={() => setShowAllUpcoming(false)}
+                                                className="px-6 py-2 text-sm sm:text-base font-semibold text-slate-600 hover:text-slate-700 border-2 border-slate-300 hover:border-slate-400 rounded-lg transition-all"
+                                            >
+                                                Show Less
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </>
                 )}

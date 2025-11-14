@@ -8,7 +8,6 @@
  * - Window activity detection (focus/blur/visibility)
  * - User activity detection (mouse, keyboard, touch, scroll)
  * - Automatic break management
- * - Backend synchronization
  */
 
 class TimeTracker {
@@ -31,13 +30,11 @@ class TimeTracker {
 
         // Timers
         this.inactivityTimer = null;
-        this.syncTimer = null;
         this.updateTimer = null;
         this.dailyResetTimer = null;
 
         // Configuration
         this.INACTIVITY_THRESHOLD = 20 * 60 * 1000; // 20 minutes
-        this.SYNC_INTERVAL = 30 * 1000; // 30 seconds
         this.UPDATE_INTERVAL = 1000; // 1 second for UI updates
 
         // Callbacks for UI updates
@@ -89,11 +86,6 @@ class TimeTracker {
      * Reset work time data at midnight
      */
     resetDailyData() {
-        // Sync current day data before resetting
-        if (this.isTracking) {
-            this.syncWithServer();
-        }
-
         // Reset counters
         this.totalWorkMs = 0;
         this.totalBreakMs = 0;
@@ -235,9 +227,6 @@ class TimeTracker {
             this.startBreak();
         }
 
-        // Start sync interval
-        this.startSync();
-
         // Start update interval for UI
         this.startUpdates();
 
@@ -260,7 +249,6 @@ class TimeTracker {
 
         // Clear timers
         if (this.inactivityTimer) clearTimeout(this.inactivityTimer);
-        if (this.syncTimer) clearInterval(this.syncTimer);
         if (this.updateTimer) clearInterval(this.updateTimer);
         if (this.dailyResetTimer) clearTimeout(this.dailyResetTimer);
 
@@ -400,44 +388,6 @@ class TimeTracker {
             console.error('[TimeTracker] Error getting state:', error);
         }
         return 'break'; // Default to break
-    }
-
-    /**
-     * Start synchronization with backend
-     */
-    startSync() {
-        this.syncTimer = setInterval(() => {
-            this.syncWithServer();
-        }, this.SYNC_INTERVAL);
-    }
-
-    /**
-     * Sync data with backend
-     */
-    async syncWithServer() {
-        if (!this.userId || !this.isTracking) return;
-
-        try {
-            const workMinutes = Math.round(this.getTotalWorkMs() / (1000 * 60));
-            const breakMinutes = Math.round(this.getTotalBreakMs() / (1000 * 60));
-
-            const response = await fetch(`/api/users/${this.userId}/sync-time`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    workMinutes,
-                    breakMinutes,
-                    status: this.getCurrentStatus(),
-                    date: this.todayKey
-                })
-            });
-
-            if (!response.ok) {
-                console.error('[TimeTracker] Sync failed:', response.statusText);
-            }
-        } catch (error) {
-            console.error('[TimeTracker] Sync error:', error);
-        }
     }
 
     /**
