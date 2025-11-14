@@ -442,16 +442,45 @@ exports.rejectRequest = (req, res) => {
 // Update project
 exports.updateProject = (req, res) => {
     const { id } = req.params;
-    const { title, description, userId } = req.body;
+    const { title, description, userId, githubRepoUrl, githubOwner, githubRepo } = req.body;
 
-    if (!title || !description) {
+    // Build dynamic update query based on provided fields
+    const updates = [];
+    const values = [];
+
+    if (title !== undefined) {
+        updates.push('title = ?');
+        values.push(title);
+    }
+
+    if (description !== undefined) {
+        updates.push('description = ?');
+        values.push(description);
+    }
+
+    if (githubRepoUrl !== undefined) {
+        updates.push('githubRepoUrl = ?');
+        values.push(githubRepoUrl);
+    }
+
+    if (githubOwner !== undefined) {
+        updates.push('githubOwner = ?');
+        values.push(githubOwner);
+    }
+
+    if (githubRepo !== undefined) {
+        updates.push('githubRepo = ?');
+        values.push(githubRepo);
+    }
+
+    if (updates.length === 0) {
         return res.status(400).json({
             success: false,
-            message: 'Title and description are required'
+            message: 'No fields to update'
         });
     }
 
-    // First check if the user is the project author
+    // First check if the user is the project author (if userId is provided)
     const checkQuery = `SELECT authorId FROM Projects WHERE id = ?`;
 
     db.get(checkQuery, [id], (err, project) => {
@@ -471,7 +500,7 @@ exports.updateProject = (req, res) => {
             });
         }
 
-        if (project.authorId != userId) {
+        if (userId && project.authorId != userId) {
             return res.status(403).json({
                 success: false,
                 message: 'Only the project owner can update the project'
@@ -479,13 +508,14 @@ exports.updateProject = (req, res) => {
         }
 
         // Update the project
+        values.push(id); // Add id at the end for WHERE clause
         const updateQuery = `
             UPDATE Projects 
-            SET title = ?, description = ?
+            SET ${updates.join(', ')}
             WHERE id = ?
         `;
 
-        db.run(updateQuery, [title, description, id], function (updateErr) {
+        db.run(updateQuery, values, function (updateErr) {
             if (updateErr) {
                 console.error('Error updating project:', updateErr.message);
                 return res.status(500).json({

@@ -9,7 +9,8 @@ import {
     Users,
     BarChart3,
     ArrowLeft,
-    FileText
+    FileText,
+    Code
 } from 'lucide-react'
 import axios from 'axios'
 import API_BASE_URL from '../config/api'
@@ -85,6 +86,7 @@ const SingleProjectPage = () => {
     const rightNavItems = [
         { id: 'task', name: 'Task', icon: CheckSquare, path: `/project/${projectId}/task` },
         { id: 'notes', name: 'Notes', icon: FileText, path: `/project/${projectId}/notes` },
+        { id: 'github', name: 'GitHub', icon: Code, path: `/project/${projectId}/github` },
         { id: 'ai', name: 'AI', icon: Sparkles, path: `/project/${projectId}/ai` },
         { id: 'chat', name: 'Chat', icon: MessageSquare, path: `/project/${projectId}/chat` },
         { id: 'peoples', name: 'Peoples', icon: Users, path: `/project/${projectId}/peoples` },

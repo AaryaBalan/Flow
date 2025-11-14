@@ -11,11 +11,12 @@ const taskRoutes = require('./routes/taskRoutes');
 const noteRoutes = require('./routes/noteRoutes');
 const aiChatRoutes = require('./routes/aiChatRoutes');
 const chatRoutes = require('./routes/chatRoutes');
+const githubRoutes = require('./routes/githubRoutes');
 
 // Load environment variables from .env file
 dotenv.config();
 
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 // Create HTTP server
 const server = http.createServer(app);
@@ -45,6 +46,7 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/notes', noteRoutes);
 app.use('/api/ai-chat', aiChatRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/github', githubRoutes);
 
 
 // Sample route
@@ -367,7 +369,7 @@ function clearTypingIndicator(projectId, userId) {
 
 
 // Start the server
-server.listen(port, () => {
+server.listen(port, '0.0.0.0', () => {
     console.log(`Server is running at http://localhost:${port}`);
     console.log(`Socket.io server is ready`);
 });

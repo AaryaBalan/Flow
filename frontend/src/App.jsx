@@ -15,6 +15,7 @@ import PeoplePage from './pages/project/PeoplePage';
 import StatsPage from './pages/project/StatsPage';
 import NotesPage from './pages/project/NotesPage';
 import NoteDetailPage from './pages/project/NoteDetailPage';
+import GitHubPage from './pages/project/GitHubPage';
 import AiComponent from './components/AiComponent';
 
 function AppContent() {
@@ -90,6 +91,7 @@ function AppContent() {
         <Route path="chat" element={<ChatPage />} />
         <Route path="peoples" element={<PeoplePage />} />
         <Route path="stats" element={<StatsPage />} />
+        <Route path="github" element={<GitHubPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
