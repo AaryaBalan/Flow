@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { Plus, CheckCircle, Circle, X, User, Lock, LockOpen, Trash2, RefreshCw, Calendar, Clock, AlertTriangle } from 'lucide-react'
+import { Plus, CheckCircle, Circle, X, User, Lock, LockOpen, Trash2, RefreshCw, Calendar, Clock, AlertTriangle, Edit } from 'lucide-react'
 import axios from 'axios'
 import toast, { Toaster } from 'react-hot-toast';
 import API_BASE_URL from '../../config/api'
@@ -8,6 +8,8 @@ import API_BASE_URL from '../../config/api'
 const TaskPage = () => {
     const { projectId } = useParams()
     const [isModalOpen, setIsModalOpen] = useState(false)
+    const [isEditMode, setIsEditMode] = useState(false)
+    const [editingTaskId, setEditingTaskId] = useState(null)
     const [formData, setFormData] = useState({
         title: '',
         description: '',
@@ -109,32 +111,69 @@ const TaskPage = () => {
         }
 
         try {
-            const response = await axios.post(`${API_BASE_URL}/api/tasks/create`, {
-                projectId: projectId,
-                title: formData.title,
-                description: formData.description,
-                taskAuthor: currentUser.name || currentUser.email?.split('@')[0] || 'User',
-                taskAuthorId: currentUser.id,
-                onlyAuthorCanComplete: formData.onlyAuthorCanComplete,
-                dueDate: formData.hasDueDate ? formData.dueDate : null
-            })
-
-            if (response.data.success) {
-                toast.success('Task created successfully!')
-                await fetchTasks() // Refresh tasks list
-                setIsModalOpen(false)
-                setFormData({
-                    title: '',
-                    description: '',
-                    onlyAuthorCanComplete: false,
-                    hasDueDate: false,
-                    dueDate: ''
+            if (isEditMode) {
+                // Edit existing task
+                const response = await axios.put(`${API_BASE_URL}/api/tasks/${editingTaskId}/edit`, {
+                    userId: currentUser.id,
+                    title: formData.title,
+                    description: formData.description,
+                    onlyAuthorCanComplete: formData.onlyAuthorCanComplete,
+                    dueDate: formData.hasDueDate ? formData.dueDate : null
                 })
+
+                if (response.data.success) {
+                    toast.success('Task updated successfully!')
+                    await fetchTasks()
+                    closeModal()
+                }
+            } else {
+                // Create new task
+                const response = await axios.post(`${API_BASE_URL}/api/tasks/create`, {
+                    projectId: projectId,
+                    title: formData.title,
+                    description: formData.description,
+                    taskAuthor: currentUser.name || currentUser.email?.split('@')[0] || 'User',
+                    taskAuthorId: currentUser.id,
+                    onlyAuthorCanComplete: formData.onlyAuthorCanComplete,
+                    dueDate: formData.hasDueDate ? formData.dueDate : null
+                })
+
+                if (response.data.success) {
+                    toast.success('Task created successfully!')
+                    await fetchTasks()
+                    closeModal()
+                }
             }
         } catch (error) {
-            console.error('Error creating task:', error)
-            toast.error(error.response?.data?.message || 'Failed to create task')
+            console.error('Error saving task:', error)
+            toast.error(error.response?.data?.message || `Failed to ${isEditMode ? 'update' : 'create'} task`)
         }
+    }
+
+    const openEditModal = (task) => {
+        setIsEditMode(true)
+        setEditingTaskId(task.id)
+        setFormData({
+            title: task.title,
+            description: task.description || '',
+            onlyAuthorCanComplete: task.onlyAuthorCanComplete === 1,
+            hasDueDate: !!task.dueDate,
+            dueDate: task.dueDate || ''
+        })
+        setIsModalOpen(true)
+    }
+
+    const closeModal = () => {
+        setIsModalOpen(false)
+        setIsEditMode(false)
+        setEditingTaskId(null)
+        setFormData({
+            title: '',
+            description: '',
+            onlyAuthorCanComplete: false,
+            hasDueDate: false,
+            dueDate: ''
+        })
     }
 
     const toggleTask = async (taskId, task) => {
@@ -382,13 +421,22 @@ const TaskPage = () => {
                                                                         ""
                                                                     )}
                                                                     {task.taskAuthorId == currentUser?.id && (
-                                                                        <button
-                                                                            onClick={() => deleteTask(task.id)}
-                                                                            className="p-1 hover:bg-red-100 rounded text-red-600 transition-colors"
-                                                                            title="Delete task"
-                                                                        >
-                                                                            <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                                                                        </button>
+                                                                        <>
+                                                                            <button
+                                                                                onClick={() => openEditModal(task)}
+                                                                                className="p-1 hover:bg-blue-100 rounded text-blue-600 transition-colors"
+                                                                                title="Edit task"
+                                                                            >
+                                                                                <Edit className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => deleteTask(task.id)}
+                                                                                className="p-1 hover:bg-red-100 rounded text-red-600 transition-colors"
+                                                                                title="Delete task"
+                                                                            >
+                                                                                <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                                                            </button>
+                                                                        </>
                                                                     )}
                                                                 </div>
                                                             </div>
@@ -464,13 +512,22 @@ const TaskPage = () => {
                                                                         ""
                                                                     )}
                                                                     {task.taskAuthorId == currentUser?.id && (
-                                                                        <button
-                                                                            onClick={() => deleteTask(task.id)}
-                                                                            className="p-1 hover:bg-red-100 rounded text-red-600 transition-colors"
-                                                                            title="Delete task"
-                                                                        >
-                                                                            <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                                                                        </button>
+                                                                        <>
+                                                                            <button
+                                                                                onClick={() => openEditModal(task)}
+                                                                                className="p-1 hover:bg-blue-100 rounded text-blue-600 transition-colors"
+                                                                                title="Edit task"
+                                                                            >
+                                                                                <Edit className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => deleteTask(task.id)}
+                                                                                className="p-1 hover:bg-red-100 rounded text-red-600 transition-colors"
+                                                                                title="Delete task"
+                                                                            >
+                                                                                <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                                                            </button>
+                                                                        </>
                                                                     )}
                                                                 </div>
                                                             </div>
@@ -711,11 +768,15 @@ const TaskPage = () => {
                             {/* Modal Header */}
                             <div className="flex items-start sm:items-center justify-between p-4 sm:p-6 border-b border-slate-200 gap-3">
                                 <div className="min-w-0 flex-1">
-                                    <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-slate-800">Add New Task</h2>
-                                    <p className="text-xs sm:text-sm text-slate-600 mt-0.5 sm:mt-1">Create a new task for the project</p>
+                                    <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-slate-800">
+                                        {isEditMode ? 'Edit Task' : 'Add New Task'}
+                                    </h2>
+                                    <p className="text-xs sm:text-sm text-slate-600 mt-0.5 sm:mt-1">
+                                        {isEditMode ? 'Update task details' : 'Create a new task for the project'}
+                                    </p>
                                 </div>
                                 <button
-                                    onClick={() => setIsModalOpen(false)}
+                                    onClick={closeModal}
                                     className="p-1.5 sm:p-2 hover:bg-slate-100 rounded-lg transition-colors shrink-0"
                                     aria-label="Close modal"
                                 >
@@ -758,20 +819,22 @@ const TaskPage = () => {
                                     />
                                 </div>
 
-                                {/* Author Field (Read-only) */}
-                                <div>
-                                    <label htmlFor="author" className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 sm:mb-2">
-                                        Author
-                                    </label>
-                                    <input
-                                        type="text"
-                                        id="author"
-                                        value={currentUser?.name?.toUpperCase() || currentUser?.email?.split('@')[0]?.toUpperCase() || 'USER'}
-                                        readOnly
-                                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 rounded-lg bg-slate-50 text-slate-700 font-semibold cursor-not-allowed"
-                                    />
-                                    <p className="text-[10px] sm:text-xs text-slate-500 mt-1.5 sm:mt-2">You will be set as the task author</p>
-                                </div>
+                                {/* Author Field (Read-only) - Only show in create mode */}
+                                {!isEditMode && (
+                                    <div>
+                                        <label htmlFor="author" className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 sm:mb-2">
+                                            Author
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="author"
+                                            value={currentUser?.name?.toUpperCase() || currentUser?.email?.split('@')[0]?.toUpperCase() || 'USER'}
+                                            readOnly
+                                            className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 rounded-lg bg-slate-50 text-slate-700 font-semibold cursor-not-allowed"
+                                        />
+                                        <p className="text-[10px] sm:text-xs text-slate-500 mt-1.5 sm:mt-2">You will be set as the task author</p>
+                                    </div>
+                                )}
 
                                 {/* Due Date Field with Toggle */}
                                 <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 sm:p-4">
@@ -853,7 +916,7 @@ const TaskPage = () => {
                                 <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 pt-3 sm:pt-4">
                                     <button
                                         type="button"
-                                        onClick={() => setIsModalOpen(false)}
+                                        onClick={closeModal}
                                         className="px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors"
                                     >
                                         Cancel
@@ -862,7 +925,7 @@ const TaskPage = () => {
                                         type="submit"
                                         className="flex-1 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base bg-linear-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all"
                                     >
-                                        Create Task
+                                        {isEditMode ? 'Update Task' : 'Create Task'}
                                     </button>
                                 </div>
                             </form>

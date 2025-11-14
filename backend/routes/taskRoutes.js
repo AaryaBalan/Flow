@@ -11,6 +11,9 @@ router.get('/project/:projectId', taskControllers.getProjectTasks);
 // Toggle task completion
 router.put('/:taskId/toggle', taskControllers.toggleTaskCompletion);
 
+// Edit a task
+router.put('/:taskId/edit', taskControllers.editTask);
+
 // Delete a task
 router.delete('/:taskId', taskControllers.deleteTask);
 

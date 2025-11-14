@@ -228,6 +228,87 @@ exports.toggleTaskCompletion = (req, res) => {
     });
 };
 
+// Edit a task (only author can edit)
+exports.editTask = (req, res) => {
+    const { taskId } = req.params;
+    const { userId, title, description, onlyAuthorCanComplete, dueDate } = req.body;
+
+    if (!taskId || !userId) {
+        return res.status(400).json({
+            success: false,
+            message: 'Task ID and user ID are required'
+        });
+    }
+
+    if (!title) {
+        return res.status(400).json({
+            success: false,
+            message: 'Task title is required'
+        });
+    }
+
+    // Check if user is the task author
+    const checkQuery = `SELECT * FROM Tasks WHERE id = ? AND taskAuthorId = ?`;
+
+    db.get(checkQuery, [taskId, userId], (err, task) => {
+        if (err) {
+            console.error('Error checking task ownership:', err.message);
+            return res.status(500).json({
+                success: false,
+                message: 'Error checking task ownership',
+                error: err.message
+            });
+        }
+
+        if (!task) {
+            return res.status(403).json({
+                success: false,
+                message: 'Only the task author can edit this task'
+            });
+        }
+
+        // Update the task
+        const onlyAuthor = onlyAuthorCanComplete ? 1 : 0;
+        const updateQuery = `
+            UPDATE Tasks 
+            SET title = ?, 
+                description = ?, 
+                onlyAuthorCanComplete = ?,
+                dueDate = ?
+            WHERE id = ?
+        `;
+
+        db.run(updateQuery, [title, description || null, onlyAuthor, dueDate || null, taskId], function (updateErr) {
+            if (updateErr) {
+                console.error('Error updating task:', updateErr.message);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Error updating task',
+                    error: updateErr.message
+                });
+            }
+
+            // Fetch updated task
+            const fetchQuery = `SELECT * FROM Tasks WHERE id = ?`;
+            db.get(fetchQuery, [taskId], (fetchErr, updatedTask) => {
+                if (fetchErr) {
+                    console.error('Error fetching updated task:', fetchErr.message);
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Task updated but error fetching details'
+                    });
+                }
+
+                res.status(200).json({
+                    success: true,
+                    message: 'Task updated successfully',
+                    task: updatedTask
+                });
+            });
+        });
+    });
+};
+
 // Delete a task (optional - only author can delete)
 exports.deleteTask = (req, res) => {
     const { taskId } = req.params;
