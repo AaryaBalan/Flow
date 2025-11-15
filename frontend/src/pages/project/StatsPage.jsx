@@ -350,7 +350,7 @@ const StatsPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6 items-start">
                 {/* Task Status Distribution */}
                 <div className="bg-white rounded-xl shadow-sm p-4 md:p-6">
-                    <h3 className="text-lg md:text-xl font-bold text-slate-800 mb-4 md:mb-6">Task Status Distribution</h3>
+                    <h3 className="text-lg md:text-xl font-bold text-slate-800 mb-4 md:mb-6">Task Distribution</h3>
                     <div className="flex flex-col items-center">
                         {totalTasks > 0 ? (
                             <>

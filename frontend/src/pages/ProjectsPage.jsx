@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, X, Users, Calendar, Clock, Coffee, Target, TrendingUp, Copy, Check, UserPlus, MoreVertical, Edit, Trash2 } from 'lucide-react'
+import { Plus, X, Users, Calendar, Clock, Coffee, Target, TrendingUp, Copy, Check, UserPlus, MoreVertical, Edit, Trash2, CheckCircle, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import axios from 'axios'
 import { v4 as uuidv4 } from 'uuid'
@@ -26,7 +26,8 @@ const ProjectsPage = () => {
     const [formData, setFormData] = useState({
         title: '',
         description: '',
-        author: ''
+        author: '',
+        dueDate: ''
     })
 
     // Load current user
@@ -208,6 +209,7 @@ const ProjectsPage = () => {
                 const response = await axios.put(`${API_BASE_URL}/api/projects/${editingProjectId}`, {
                     title: formData.title,
                     description: formData.description,
+                    dueDate: formData.dueDate || null,
                     userId: currentUser.id
                 })
 
@@ -217,13 +219,14 @@ const ProjectsPage = () => {
                     setIsModalOpen(false)
                     setIsEditMode(false)
                     setEditingProjectId(null)
-                    setFormData({ title: '', description: '', author: '' })
+                    setFormData({ title: '', description: '', author: '', dueDate: '' })
                 }
             } else {
                 // Create new project
                 const response = await axios.post(`${API_BASE_URL}/api/projects/create`, {
                     title: formData.title,
                     description: formData.description,
+                    dueDate: formData.dueDate || null,
                     authorId: currentUser.id,
                     authorName: authorName,
                     joinCode: joinCode
@@ -233,7 +236,7 @@ const ProjectsPage = () => {
                     toast.success('Project created successfully!')
                     await fetchUserProjects()
                     setIsModalOpen(false)
-                    setFormData({ title: '', description: '', author: '' })
+                    setFormData({ title: '', description: '', author: '', dueDate: '' })
                 }
             }
         } catch (error) {
@@ -246,7 +249,8 @@ const ProjectsPage = () => {
         setFormData({
             title: project.title,
             description: project.description,
-            author: project.authorName
+            author: project.authorName,
+            dueDate: project.dueDate ? project.dueDate.split('T')[0] : ''
         })
         setEditingProjectId(project.id)
         setIsEditMode(true)
@@ -279,7 +283,7 @@ const ProjectsPage = () => {
         setIsModalOpen(false)
         setIsEditMode(false)
         setEditingProjectId(null)
-        setFormData({ title: '', description: '', author: '' })
+        setFormData({ title: '', description: '', author: '', dueDate: '' })
     }
 
     const handleJoinProject = async (e) => {
@@ -417,7 +421,7 @@ const ProjectsPage = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
                     <div className="flex items-center gap-2">
                         <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
-                        <h2 className="text-lg sm:text-xl font-bold text-slate-800">Today's Activity</h2>
+                        <h2 className="text-lg sm:text-xl font-bold text-slate-800">Overall Activity</h2>
                     </div>
                     <span className={`px-2.5 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium self-start sm:self-auto ${userActivity?.currentStatus === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                         {userActivity?.currentStatus === 'active' ? '🟢 Working' : '🔴 On Break'}
@@ -449,7 +453,7 @@ const ProjectsPage = () => {
                             <Target className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             <span className="text-xs sm:text-sm font-medium">Tasks Done</span>
                         </div>
-                        <p className="text-lg sm:text-2xl font-bold text-slate-800">{userActivity?.tasksCompletedToday || 0}</p>
+                        <p className="text-lg sm:text-2xl font-bold text-slate-800">{userActivity?.tasksCompletedTotal || 0}</p>
                     </div>
 
                     {/* Active Projects */}
@@ -492,207 +496,274 @@ const ProjectsPage = () => {
             </div>
 
             {/* Projects Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {isLoading ? (
-                    <div className="col-span-full text-center py-8 sm:py-12">
-                        <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3 sm:mb-4"></div>
-                        <p className="text-sm sm:text-base text-slate-600">Loading projects...</p>
-                    </div>
-                ) : projects.length === 0 ? (
-                    <div className="col-span-full text-center py-8 sm:py-12 px-4">
-                        <Users className="w-12 h-12 sm:w-16 sm:h-16 text-slate-300 mx-auto mb-3 sm:mb-4" />
-                        <h3 className="text-lg sm:text-xl font-semibold text-slate-800 mb-2">No Projects Yet</h3>
-                        <p className="text-sm sm:text-base text-slate-600 mb-4">Create your first project or join an existing one</p>
-                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 sm:gap-3">
-                            <button
-                                onClick={() => setIsModalOpen(true)}
-                                className="px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all"
-                            >
-                                Create Project
-                            </button>
-                            <button
-                                onClick={() => setIsJoinModalOpen(true)}
-                                className="px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all"
-                            >
-                                Join Project
-                            </button>
-                        </div>
-                    </div>
-                ) : (
-                    projects.map(project => {
-                        const isPending = project.invitationStatus === 'pending';
-                        const ProjectWrapper = isPending ? 'div' : Link;
-                        const wrapperProps = isPending
-                            ? { className: "bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-100 overflow-hidden block opacity-75 cursor-not-allowed" }
-                            : {
-                                to: `/project/${project.id}`,
-                                className: "bg-white rounded-lg sm:rounded-xl shadow-sm hover:shadow-md transition-all border border-slate-100 overflow-hidden block"
-                            };
+            {(() => {
+                // Helper function to check if project is overdue
+                const isOverdue = (dueDate) => {
+                    if (!dueDate) return false;
+                    return new Date(dueDate) < new Date();
+                };
 
-                        return (
-                            <ProjectWrapper
-                                key={project.id}
-                                {...wrapperProps}
-                            >
-                                {/* Pending Banner */}
-                                {isPending && (
-                                    <div className="bg-amber-100 border-b border-amber-200 px-3 sm:px-4 py-1.5 sm:py-2">
-                                        <p className="text-xs sm:text-sm font-semibold text-amber-800 text-center">
-                                            Waiting for project owner approval
-                                        </p>
-                                    </div>
-                                )}
+                // Separate projects into active and overdue
+                const activeProjects = projects.filter(p => !isOverdue(p.dueDate));
+                const overdueProjects = projects.filter(p => isOverdue(p.dueDate));
 
-                                {/* Project Header */}
-                                <div className="p-3 sm:p-4 md:p-5 pb-3 sm:pb-4">
-                                    <div className="flex items-start gap-2.5 sm:gap-3 md:gap-4 mb-3 sm:mb-4">
-                                        {/* Profile Image with First Letter */}
-                                        <div className={`w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-lg sm:rounded-xl ${isPending ? 'bg-linear-to-br from-amber-500 to-orange-500' : 'bg-linear-to-br from-blue-600 to-indigo-600'} flex items-center justify-center shrink-0 shadow-sm sm:shadow-md`}>
-                                            <span className="text-lg sm:text-xl md:text-2xl font-bold text-white">{getInitials(project.title)}</span>
-                                        </div>
+                // Helper function to render project grid
+                const renderProjectsGrid = (projectList, isOverdueSection = false) => (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                        {projectList.length === 0 ? (
+                            <div className="col-span-full text-center py-8 sm:py-12 px-4">
+                                <p className="text-sm sm:text-base text-slate-600">{isOverdueSection ? 'No overdue projects' : 'No active projects'}</p>
+                            </div>
+                        ) : (
+                            projectList.map(project => {
+                                const isPending = project.invitationStatus === 'pending';
+                                const ProjectWrapper = isPending ? 'div' : Link;
+                                const wrapperProps = isPending
+                                    ? { className: "bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-100 overflow-hidden block opacity-75 cursor-not-allowed" }
+                                    : {
+                                        to: `/project/${project.id}`,
+                                        className: "bg-white rounded-lg sm:rounded-xl shadow-sm hover:shadow-md transition-all border border-slate-100 overflow-hidden block"
+                                    };
 
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-start justify-between gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
-                                                <h3 className="text-base sm:text-lg font-semibold text-slate-800 truncate">{project.title}</h3>
-                                                <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-                                                    <span className={`text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap ${isPending
-                                                        ? 'bg-amber-100 text-amber-700 border border-amber-300'
-                                                        : project.status === 'Active'
-                                                            ? 'bg-green-100 text-green-700'
-                                                            : 'bg-blue-100 text-blue-700'
-                                                        }`}>
-                                                        {isPending ? 'Pending' : project.status}
-                                                    </span>
+                                return (
+                                    <ProjectWrapper
+                                        key={project.id}
+                                        {...wrapperProps}
+                                    >
+                                        {/* Pending Banner */}
+                                        {isPending && (
+                                            <div className="bg-amber-100 border-b border-amber-200 px-3 sm:px-4 py-1.5 sm:py-2">
+                                                <p className="text-xs sm:text-sm font-semibold text-amber-800 text-center">
+                                                    Waiting for project owner approval
+                                                </p>
+                                            </div>
+                                        )}
 
-                                                    {/* Three Dot Menu - Only show for project owner */}
-                                                    {!isPending && project.authorId == currentUser?.id && (
-                                                        <div className="relative">
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.preventDefault()
-                                                                    setOpenMenuId(openMenuId === project.id ? null : project.id)
-                                                                }}
-                                                                className="p-1 sm:p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
-                                                            >
-                                                                <MoreVertical className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600" />
-                                                            </button>
+                                        {/* Overdue Banner */}
+                                        {isOverdueSection && (
+                                            <div className="bg-red-100 border-b border-red-200 px-3 sm:px-4 py-1.5 sm:py-2">
+                                                <p className="text-xs sm:text-sm font-semibold text-red-800 text-center">
+                                                    Overdue
+                                                </p>
+                                            </div>
+                                        )}
 
-                                                            {/* Dropdown Menu */}
-                                                            {openMenuId === project.id && (
-                                                                <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-10 min-w-[120px] sm:min-w-[150px]">
+                                        {/* Project Header */}
+                                        <div className="p-3 sm:p-4 md:p-5 pb-3 sm:pb-4">
+                                            <div className="flex items-start gap-2.5 sm:gap-3 md:gap-4 mb-3 sm:mb-4">
+                                                {/* Profile Image with First Letter */}
+                                                <div className={`w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-lg sm:rounded-xl ${isPending ? 'bg-linear-to-br from-amber-500 to-orange-500' : isOverdueSection ? 'bg-linear-to-br from-red-600 to-orange-600' : 'bg-linear-to-br from-blue-600 to-indigo-600'} flex items-center justify-center shrink-0 shadow-sm sm:shadow-md`}>
+                                                    <span className="text-lg sm:text-xl md:text-2xl font-bold text-white">{getInitials(project.title)}</span>
+                                                </div>
+
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-start justify-between gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                                                        <h3 className="text-base sm:text-lg font-semibold text-slate-800 truncate">{project.title}</h3>
+                                                        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                                                            <span className={`text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap ${isPending
+                                                                ? 'bg-amber-100 text-amber-700 border border-amber-300'
+                                                                : isOverdueSection
+                                                                    ? 'bg-red-100 text-red-700'
+                                                                    : project.status === 'Active'
+                                                                        ? 'bg-green-100 text-green-700'
+                                                                        : 'bg-blue-100 text-blue-700'
+                                                                }`}>
+                                                                {isPending ? 'Pending' : isOverdueSection ? 'Overdue' : project.status}
+                                                            </span>
+
+                                                            {/* Three Dot Menu - Only show for project owner */}
+                                                            {!isPending && project.authorId == currentUser?.id && (
+                                                                <div className="relative">
                                                                     <button
                                                                         onClick={(e) => {
                                                                             e.preventDefault()
-                                                                            handleEditProject(project)
+                                                                            setOpenMenuId(openMenuId === project.id ? null : project.id)
                                                                         }}
-                                                                        className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-left text-xs sm:text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-1.5 sm:gap-2"
+                                                                        className="p-1 sm:p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
                                                                     >
-                                                                        <Edit className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                                                                        Edit Project
+                                                                        <MoreVertical className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600" />
                                                                     </button>
-                                                                    <button
-                                                                        onClick={(e) => {
-                                                                            e.preventDefault()
-                                                                            handleDeleteProject(project.id)
-                                                                        }}
-                                                                        className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-left text-xs sm:text-sm text-red-600 hover:bg-red-50 flex items-center gap-1.5 sm:gap-2"
-                                                                    >
-                                                                        <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                                                                        Delete Project
-                                                                    </button>
+
+                                                                    {/* Dropdown Menu */}
+                                                                    {openMenuId === project.id && (
+                                                                        <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-10 min-w-[120px] sm:min-w-[150px]">
+                                                                            <button
+                                                                                onClick={(e) => {
+                                                                                    e.preventDefault()
+                                                                                    handleEditProject(project)
+                                                                                }}
+                                                                                className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-left text-xs sm:text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-1.5 sm:gap-2"
+                                                                            >
+                                                                                <Edit className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                                                                Edit
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={(e) => {
+                                                                                    e.preventDefault()
+                                                                                    handleDeleteProject(project.id)
+                                                                                }}
+                                                                                className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-left text-xs sm:text-sm text-red-600 hover:bg-red-50 flex items-center gap-1.5 sm:gap-2"
+                                                                            >
+                                                                                <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                                                                Delete
+                                                                            </button>
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             )}
                                                         </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <p className="text-xs sm:text-sm text-slate-600 line-clamp-2 mb-2 sm:mb-3">
-                                                {project.description}
-                                            </p>
-                                        </div>
-                                    </div>
+                                                    </div>
 
-                                    {/* Author */}
-                                    <div className="mb-2 sm:mb-3">
-                                        <p className="text-xs sm:text-sm text-slate-500">
-                                            <span className="font-medium text-slate-700">Author:</span> {project.authorName}
-                                        </p>
-                                    </div>
-
-                                    {/* Join Code - Only show for project owner and approved members */}
-                                    {!isPending && project.authorId == currentUser?.id ? (
-                                        <div className="mb-2 sm:mb-3 p-2.5 sm:p-3 bg-green-50 rounded-lg">
-                                            <div className="flex items-center justify-between gap-2">
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-[10px] sm:text-xs text-slate-600 mb-0.5 sm:mb-1 font-medium">Join Code</p>
-                                                    <p className="text-base sm:text-lg font-bold text-green-600 font-mono truncate">{project.joinCode}</p>
-                                                </div>
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.preventDefault()
-                                                        handleCopyCode(project.joinCode, `project-${project.id}`)
-                                                    }}
-                                                    className="px-2.5 sm:px-3 py-1.5 sm:py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center gap-1 text-xs sm:text-sm font-medium shrink-0"
-                                                >
-                                                    {copiedCodeId === `project-${project.id}` ? (
-                                                        <>
-                                                            <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                                                            <span className="hidden sm:inline">Copied</span>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                                                            <span className="hidden sm:inline">Copy</span>
-                                                        </>
-                                                    )}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ) : !isPending && (
-                                        <div className="mb-2 sm:mb-3 py-3 sm:py-4 px-2.5 sm:px-3 bg-blue-50 rounded-lg">
-                                            <div className="flex items-center gap-2 sm:gap-3">
-                                                <div className="p-1.5 sm:p-2 bg-white rounded-lg shadow-sm shrink-0">
-                                                    <Users className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
-                                                </div>
-                                                <div className='flex flex-col gap-y-1 sm:gap-y-1.5 min-w-0'>
-                                                    <p className="text-[10px] sm:text-xs text-blue-700 font-semibold">Team Member</p>
-                                                    <p className="text-xs sm:text-sm text-slate-700 font-medium">Collaborating on this project</p>
+                                                    <p className="text-xs sm:text-sm text-slate-600 line-clamp-2">{project.description}</p>
                                                 </div>
                                             </div>
                                         </div>
-                                    )}
 
-                                    {/* Meta Info */}
-                                    <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4 text-xs sm:text-sm text-slate-600">
-                                        <div className="flex items-center gap-1 sm:gap-1.5">
-                                            <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                                            <span>{project.peopleJoined} joined</span>
-                                        </div>
-                                        <div className="flex items-center gap-1 sm:gap-1.5">
-                                            <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                                            <span className="truncate">{formatDate(project.createdAt)}</span>
-                                        </div>
-                                    </div>
+                                        {/* Project Stats */}
+                                        <div className="px-3 sm:px-4 md:px-5 py-3 sm:py-4 border-t border-slate-100 space-y-2 sm:space-y-3">
+                                            {/* Author and People */}
+                                            <div className="flex items-center justify-between text-xs sm:text-sm">
+                                                <div className="flex items-center gap-1">
+                                                    <p className="text-slate-600">Author:</p>
+                                                    <p className="font-semibold text-slate-800">{project.authorName}</p>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <p className="text-slate-600">People Joined:</p>
+                                                    <p className="font-semibold text-slate-800">{project.peopleJoined}</p>
+                                                </div>
+                                            </div>
 
-                                    {/* Progress */}
-                                    <div className="space-y-1.5 sm:space-y-2">
-                                        <div className="flex items-center justify-between text-xs sm:text-sm">
-                                            <span className="text-slate-600 font-medium">Progress</span>
-                                            <span className="font-semibold text-slate-800">{project.progress}%</span>
+                                            {/* Due Date */}
+                                            <div className="flex items-center justify-between text-xs sm:text-sm">
+                                                <span className="text-slate-600 font-medium">Due Date:</span>
+                                                <span className="font-semibold text-slate-800">
+                                                    {project.dueDate
+                                                        ? new Date(project.dueDate).toLocaleDateString('en-US', {
+                                                            year: 'numeric',
+                                                            month: 'short',
+                                                            day: 'numeric'
+                                                        })
+                                                        : 'No due date'
+                                                    }
+                                                </span>
+                                            </div>
+
+                                            {/* Join Code - Only show for project owner */}
+                                            {!isPending && project.authorId == currentUser?.id && (
+                                                <div className="mt-2 sm:mt-3 p-2 sm:p-3 bg-green-50 rounded-lg border border-green-200">
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-[10px] sm:text-xs text-green-700 font-semibold mb-0.5">Join Code</p>
+                                                            <p className="text-sm sm:text-base font-bold text-green-600 font-mono">{project.joinCode}</p>
+                                                        </div>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.preventDefault()
+                                                                handleCopyCode(project.joinCode, `project-${project.id}`)
+                                                            }}
+                                                            className="px-2 sm:px-3 py-1 sm:py-1.5 bg-green-600 hover:bg-green-700 text-white rounded text-xs sm:text-sm font-medium transition-colors flex items-center gap-1 shrink-0 whitespace-nowrap"
+                                                        >
+                                                            {copiedCodeId === `project-${project.id}` ? (
+                                                                <>
+                                                                    <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                                                                    <span className="inline">Copied!</span>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <Copy className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                                                                    <span className="inline">Copy</span>
+                                                                </>
+                                                            )}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Team Member Badge - Show for non-owners */}
+                                            {!isPending && project.authorId != currentUser?.id && (
+                                                <div className="mt-2 sm:mt-3 py-2 sm:py-2.5 px-2 sm:px-3 bg-blue-50 rounded-lg border border-blue-200">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="p-1 bg-white rounded shrink-0">
+                                                            <Users className="w-5 h-5 text-indigo-600" />
+                                                        </div>
+                                                        <div className='min-w-0'>
+                                                            <p className="text-[10px] sm:text-xs text-blue-700 font-semibold">Team Member</p>
+                                                            <p className="text-[10px] sm:text-xs text-slate-700">Collaborating on this project</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
-                                        <div className="w-full bg-slate-200 rounded-full h-1.5 sm:h-2">
-                                            <div
-                                                className={`${isPending ? 'bg-linear-to-r from-amber-500 to-orange-500' : 'bg-linear-to-r from-blue-600 to-indigo-600'} h-1.5 sm:h-2 rounded-full transition-all`}
-                                                style={{ width: `${project.progress}%` }}
-                                            />
-                                        </div>
-                                    </div>
+                                    </ProjectWrapper>
+                                );
+                            })
+                        )}
+                    </div>
+                );
+
+                if (isLoading) {
+                    return (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                            <div className="col-span-full text-center py-8 sm:py-12">
+                                <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3 sm:mb-4"></div>
+                                <p className="text-sm sm:text-base text-slate-600">Loading projects...</p>
+                            </div>
+                        </div>
+                    );
+                }
+
+                if (projects.length === 0) {
+                    return (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                            <div className="col-span-full text-center py-8 sm:py-12 px-4">
+                                <Users className="w-12 h-12 sm:w-16 sm:h-16 text-slate-300 mx-auto mb-3 sm:mb-4" />
+                                <h3 className="text-lg sm:text-xl font-semibold text-slate-800 mb-2">No Projects Yet</h3>
+                                <p className="text-sm sm:text-base text-slate-600 mb-4">Create your first project or join an existing one</p>
+                                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 sm:gap-3">
+                                    <button
+                                        onClick={() => setIsModalOpen(true)}
+                                        className="px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all"
+                                    >
+                                        Create Project
+                                    </button>
+                                    <button
+                                        onClick={() => setIsJoinModalOpen(true)}
+                                        className="px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all"
+                                    >
+                                        Join Project
+                                    </button>
                                 </div>
-                            </ProjectWrapper>
-                        );
-                    })
-                )}
-            </div>
+                            </div>
+                        </div>
+                    );
+                }
+
+                return (
+                    <>
+                        {/* Active Projects Section */}
+                        {activeProjects.length > 0 && (
+                            <div>
+                                <h2 className="text-xl sm:text-2xl font-bold text-slate-800 mb-4 sm:mb-6 flex items-center gap-2">
+                                    <CheckCircle className="w-6 h-6 text-green-600" />
+                                    Active Projects
+                                </h2>
+                                {renderProjectsGrid(activeProjects, false)}
+                            </div>
+                        )}
+
+                        {/* Overdue Projects Section */}
+                        {overdueProjects.length > 0 && (
+                            <div className="mt-8 sm:mt-12">
+                                <h2 className="text-xl sm:text-2xl font-bold text-slate-800 mb-4 sm:mb-6 flex items-center gap-2">
+                                    <AlertCircle className="w-6 h-6 text-red-600" />
+                                    Overdue Projects
+                                </h2>
+                                {renderProjectsGrid(overdueProjects, true)}
+                            </div>
+                        )}
+                    </>
+                );
+            })()}
 
             {/* Floating Action Buttons */}
             <div className="fixed bottom-6 sm:bottom-8 right-6 sm:right-8 flex items-center gap-3 sm:gap-4">
@@ -808,6 +879,22 @@ const ProjectsPage = () => {
                                     placeholder="Describe your project..."
                                     className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
                                 />
+                            </div>
+
+                            {/* Due Date Field */}
+                            <div>
+                                <label htmlFor="dueDate" className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 sm:mb-2">
+                                    Project Due Date (Optional)
+                                </label>
+                                <input
+                                    type="date"
+                                    id="dueDate"
+                                    name="dueDate"
+                                    value={formData.dueDate}
+                                    onChange={handleInputChange}
+                                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                />
+                                <p className="text-xs text-slate-500 mt-1.5 sm:mt-2">Leave empty for no due date</p>
                             </div>
 
                             {/* Author Field */}

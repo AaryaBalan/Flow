@@ -604,10 +604,10 @@ const HomePage = () => {
                 </div>
             </div>            {/* Two Column Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Recent Projects */}
+                {/* Projects Sidebar */}
                 <div className="lg:col-span-1 bg-white rounded-xl shadow-sm p-4 sm:p-6">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg sm:text-xl font-bold text-slate-800">Recent Projects</h2>
+                        <h2 className="text-lg sm:text-xl font-bold text-slate-800">Projects</h2>
                         <button
                             onClick={() => navigate('/projects')}
                             className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 font-medium"
@@ -625,37 +625,108 @@ const HomePage = () => {
                             <p className="text-sm">No projects yet</p>
                         </div>
                     ) : (
-                        <div className="space-y-3">
-                            {projects.map(project => {
-                                const progress = project.progress || 0
+                        <div className="space-y-6">
+                            {/* Active Projects */}
+                            {(() => {
+                                const isOverdue = (dueDate) => {
+                                    if (!dueDate) return false;
+                                    return new Date(dueDate) < new Date();
+                                };
+                                const activeProjects = projects.filter(p => !isOverdue(p.dueDate));
+                                const overdueProjects = projects.filter(p => isOverdue(p.dueDate));
+
                                 return (
-                                    <div
-                                        key={project.id}
-                                        onClick={() => navigate(`/project/${project.id}/task`)}
-                                        className="p-3 border border-slate-200 rounded-lg hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer"
-                                    >
-                                        <div className="flex items-start justify-between mb-2">
-                                            <h3 className="font-semibold text-slate-800 text-sm truncate flex-1">
-                                                {project.title}
-                                            </h3>
-                                        </div>
-                                        <p className="text-xs text-slate-600 mb-2 line-clamp-2">
-                                            {project.description || 'No description'}
-                                        </p>
-                                        <div className="flex items-center gap-2">
-                                            <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                                                <div
-                                                    className={`h-full ${getProgressColor(progress)} transition-all`}
-                                                    style={{ width: `${progress}%` }}
-                                                ></div>
+                                    <>
+                                        {/* Active Projects Section */}
+                                        {activeProjects.length > 0 && (
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <CheckCircle className="w-4 h-4 text-green-600" />
+                                                    <h3 className="text-sm font-semibold text-slate-700">Active</h3>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    {activeProjects.map(project => (
+                                                        <div
+                                                            key={project.id}
+                                                            onClick={() => navigate(`/project/${project.id}/task`)}
+                                                            className="p-3 border border-slate-200 rounded-lg hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer"
+                                                        >
+                                                            <div className="flex items-start justify-between mb-2">
+                                                                <h3 className="font-semibold text-slate-800 text-sm truncate flex-1">
+                                                                    {project.title}
+                                                                </h3>
+                                                            </div>
+                                                            <p className="text-xs text-slate-600 mb-2 line-clamp-1">
+                                                                {project.description || 'No description'}
+                                                            </p>
+                                                            <div className="flex items-center justify-between text-xs">
+                                                                <span className="text-slate-500">Due Date</span>
+                                                                <span className="font-medium text-slate-700">
+                                                                    {project.dueDate
+                                                                        ? new Date(project.dueDate).toLocaleDateString('en-US', {
+                                                                            year: 'numeric',
+                                                                            month: 'short',
+                                                                            day: 'numeric'
+                                                                        })
+                                                                        : 'No due date'
+                                                                    }
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
-                                            <span className="text-xs font-medium text-slate-600">
-                                                {progress}%
-                                            </span>
-                                        </div>
-                                    </div>
-                                )
-                            })}
+                                        )}
+
+                                        {/* Overdue Projects Section */}
+                                        {overdueProjects.length > 0 && (
+                                            <div className="pt-4 border-t border-slate-200">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <AlertCircle className="w-4 h-4 text-red-600" />
+                                                    <h3 className="text-sm font-semibold text-slate-700">Overdue</h3>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    {overdueProjects.map(project => (
+                                                        <div
+                                                            key={project.id}
+                                                            onClick={() => navigate(`/project/${project.id}/task`)}
+                                                            className="p-3 border border-red-200 bg-red-50 rounded-lg hover:border-red-300 hover:shadow-sm transition-all cursor-pointer"
+                                                        >
+                                                            <div className="flex items-start justify-between mb-2">
+                                                                <h3 className="font-semibold text-slate-800 text-sm truncate flex-1">
+                                                                    {project.title}
+                                                                </h3>
+                                                            </div>
+                                                            <p className="text-xs text-slate-600 mb-2 line-clamp-1">
+                                                                {project.description || 'No description'}
+                                                            </p>
+                                                            <div className="flex items-center justify-between text-xs">
+                                                                <span className="text-red-600 font-medium">Overdue</span>
+                                                                <span className="font-medium text-slate-700">
+                                                                    {project.dueDate
+                                                                        ? new Date(project.dueDate).toLocaleDateString('en-US', {
+                                                                            year: 'numeric',
+                                                                            month: 'short',
+                                                                            day: 'numeric'
+                                                                        })
+                                                                        : 'No due date'
+                                                                    }
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {activeProjects.length === 0 && overdueProjects.length === 0 && (
+                                            <div className="text-center py-8 text-slate-500">
+                                                <p className="text-sm">No projects to display</p>
+                                            </div>
+                                        )}
+                                    </>
+                                );
+                            })()}
                         </div>
                     )}
                 </div>

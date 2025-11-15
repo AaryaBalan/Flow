@@ -55,12 +55,29 @@ const GitHubPage = () => {
             const owner = match[1]
             const repo = match[2].replace(/\.git$/, '')
 
+            // Get userId from localStorage - user is stored as JSON object
+            const userStr = localStorage.getItem('user')
+            if (!userStr) {
+                toast.error('User information not found. Please log in again.')
+                return
+            }
+
+            let userId
+            try {
+                const userData = JSON.parse(userStr)
+                userId = userData.id
+            } catch (e) {
+                toast.error('Invalid user data. Please log in again.')
+                return
+            }
+
             const response = await axios.put(
                 `${API_BASE_URL}/api/projects/${projectId}`,
                 {
                     githubRepoUrl: githubRepoUrl.trim(),
                     githubOwner: owner,
-                    githubRepo: repo
+                    githubRepo: repo,
+                    userId: userId
                 }
             )
 

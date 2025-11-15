@@ -1,4 +1,4 @@
-backend/database/database.db
+backend/database/devcollab.db
 frontend/node_modules/
 frontend/.env
 

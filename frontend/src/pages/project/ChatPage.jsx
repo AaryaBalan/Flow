@@ -262,7 +262,7 @@ const ChatPage = () => {
     return (
         <div className="space-y-4 sm:space-y-6">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <div className="flex items-start sm:items-center gap-3">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-linear-to-br from-green-600 to-teal-600 rounded-xl flex items-center justify-center shrink-0">
                     <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>

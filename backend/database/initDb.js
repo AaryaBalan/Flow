@@ -1,7 +1,7 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-const dbPath = path.join(__dirname, 'database.db');
+const dbPath = path.join(__dirname, 'devcollab.db');
 
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
@@ -74,6 +74,10 @@ function initializeTables() {
                 joinCode TEXT UNIQUE NOT NULL,
                 status TEXT DEFAULT 'Active',
                 progress INTEGER DEFAULT 0,
+                dueDate DATETIME,
+                githubRepoUrl TEXT,
+                githubOwner TEXT,
+                githubRepo TEXT,
                 createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (authorId) REFERENCES Users(id) ON DELETE CASCADE
             )
@@ -82,6 +86,32 @@ function initializeTables() {
                 console.error('Error creating Projects table:', err.message);
             } else {
                 console.log('Projects table ready');
+
+                // Add dueDate column to existing table if it doesn't exist
+                db.run(`ALTER TABLE Projects ADD COLUMN dueDate DATETIME`, (alterErr) => {
+                    if (alterErr && !alterErr.message.includes('duplicate column')) {
+                        console.error('Error adding dueDate column:', alterErr.message);
+                    } else if (!alterErr) {
+                        console.log('✓ Added dueDate column');
+                    }
+                });
+
+                // Add GitHub columns to existing table if they don't exist
+                const githubColumns = [
+                    { name: 'githubRepoUrl', definition: 'TEXT' },
+                    { name: 'githubOwner', definition: 'TEXT' },
+                    { name: 'githubRepo', definition: 'TEXT' }
+                ];
+
+                githubColumns.forEach(column => {
+                    db.run(`ALTER TABLE Projects ADD COLUMN ${column.name} ${column.definition}`, (alterErr) => {
+                        if (alterErr && !alterErr.message.includes('duplicate column')) {
+                            console.error(`Error adding ${column.name} column:`, alterErr.message);
+                        } else if (!alterErr) {
+                            console.log(`✓ Added GitHub column: ${column.name}`);
+                        }
+                    });
+                });
             }
         });
 

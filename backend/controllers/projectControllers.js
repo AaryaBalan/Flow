@@ -5,9 +5,40 @@ function generateJoinCode() {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+// Calculate progress based on due date
+// If no due date is set, returns 0
+// Otherwise returns (days_elapsed / days_until_due) * 100, capped at 100
+function calculateProgress(createdAt, dueDate) {
+    if (!dueDate) {
+        return 0;
+    }
+
+    const now = new Date();
+    const projectStart = new Date(createdAt);
+    const projectDue = new Date(dueDate);
+
+    // If due date is in the past, return 100
+    if (projectDue <= now) {
+        return 100;
+    }
+
+    // Calculate days elapsed and total days
+    const daysElapsed = (now - projectStart) / (1000 * 60 * 60 * 24);
+    const totalDays = (projectDue - projectStart) / (1000 * 60 * 60 * 24);
+
+    // Avoid division by zero
+    if (totalDays <= 0) {
+        return 0;
+    }
+
+    const progress = (daysElapsed / totalDays) * 100;
+    const cappedProgress = Math.min(progress, 100); // Cap at 100%
+    return parseFloat(cappedProgress.toFixed(2)); // Round to 2 decimal places
+}
+
 // Create a new project
 exports.createProject = (req, res) => {
-    const { title, description, authorId, authorName, joinCode } = req.body;
+    const { title, description, authorId, authorName, joinCode, dueDate } = req.body;
 
     if (!title || !description || !authorId || !authorName) {
         return res.status(400).json({
@@ -19,12 +50,15 @@ exports.createProject = (req, res) => {
     // Use provided join code or generate one if not provided (fallback)
     const finalJoinCode = joinCode || generateJoinCode();
 
+    // Format dueDate - convert empty string to null for database
+    const finalDueDate = dueDate && dueDate.trim() ? dueDate : null;
+
     const query = `
-        INSERT INTO Projects (title, description, authorId, authorName, joinCode, status, progress)
-        VALUES (?, ?, ?, ?, ?, 'Active', 0)
+        INSERT INTO Projects (title, description, authorId, authorName, joinCode, status, progress, dueDate)
+        VALUES (?, ?, ?, ?, ?, 'Active', 0, ?)
     `;
 
-    db.run(query, [title, description, authorId, authorName, finalJoinCode], function (err) {
+    db.run(query, [title, description, authorId, authorName, finalJoinCode, finalDueDate], function (err) {
         if (err) {
             console.error('Error creating project:', err.message);
             return res.status(500).json({
@@ -199,9 +233,15 @@ exports.getUserProjects = (req, res) => {
             });
         }
 
+        // Calculate dynamic progress for each project
+        const projectsWithProgress = (projects || []).map(project => ({
+            ...project,
+            progress: calculateProgress(project.createdAt, project.dueDate)
+        }));
+
         res.status(200).json({
             success: true,
-            projects: projects || []
+            projects: projectsWithProgress
         });
     });
 };
@@ -242,6 +282,9 @@ exports.getProjectById = (req, res) => {
                 message: 'Project not found'
             });
         }
+
+        // Calculate dynamic progress
+        project.progress = calculateProgress(project.createdAt, project.dueDate);
 
         // Check if user is a member (if userId provided)
         if (userId) {
@@ -442,7 +485,7 @@ exports.rejectRequest = (req, res) => {
 // Update project
 exports.updateProject = (req, res) => {
     const { id } = req.params;
-    const { title, description, userId, githubRepoUrl, githubOwner, githubRepo } = req.body;
+    const { title, description, userId, githubRepoUrl, githubOwner, githubRepo, dueDate } = req.body;
 
     // Build dynamic update query based on provided fields
     const updates = [];
@@ -473,6 +516,12 @@ exports.updateProject = (req, res) => {
         values.push(githubRepo);
     }
 
+    if (dueDate !== undefined) {
+        updates.push('dueDate = ?');
+        const finalDueDate = dueDate && dueDate.trim() ? dueDate : null;
+        values.push(finalDueDate);
+    }
+
     if (updates.length === 0) {
         return res.status(400).json({
             success: false,
@@ -480,7 +529,11 @@ exports.updateProject = (req, res) => {
         });
     }
 
-    // First check if the user is the project author (if userId is provided)
+    // First check if the user is the project author (only for title/description updates)
+    // GitHub URL updates are allowed for any project member
+    const isGithubOnlyUpdate = (updates.length > 0) &&
+        !updates.some(u => u.includes('title') || u.includes('description') || u.includes('dueDate'));
+
     const checkQuery = `SELECT authorId FROM Projects WHERE id = ?`;
 
     db.get(checkQuery, [id], (err, project) => {
@@ -500,7 +553,8 @@ exports.updateProject = (req, res) => {
             });
         }
 
-        if (userId && project.authorId != userId) {
+        // Only check authorization for title/description/dueDate updates, not for GitHub URL updates
+        if (!isGithubOnlyUpdate && userId && project.authorId != userId) {
             return res.status(403).json({
                 success: false,
                 message: 'Only the project owner can update the project'

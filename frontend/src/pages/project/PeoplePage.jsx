@@ -123,10 +123,6 @@ const PeoplePage = () => {
                         {isLoading ? 'Loading...' : `${teamMembers.length} people working on this project`}
                     </p>
                 </div>
-                <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto">
-                    <UserPlus className="w-5 h-5" />
-                    <span className="whitespace-nowrap">Add Member</span>
-                </button>
             </div>
 
             {/* Pending Approval Requests */}
@@ -203,7 +199,7 @@ const PeoplePage = () => {
 
             {/* Team Members Grid */}
             <div>
-                <h3 className="text-xl font-bold text-slate-800 mb-4">Current Team</h3>
+                <h3 className="text-xl font-bold text-yellow-800 bg-yellow-100 w-fit rounded-lg p-2 mb-10">{project?.title || 'Project'} Team</h3>
 
                 {isLoading ? (
                     <div className="text-center py-12">

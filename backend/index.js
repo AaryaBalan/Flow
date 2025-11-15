@@ -18,6 +18,13 @@ dotenv.config();
 
 const port = process.env.PORT || 3000;
 
+// Middleware
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true,
+}));
+
 // Create HTTP server
 const server = http.createServer(app);
 
@@ -30,13 +37,7 @@ const io = new Server(server, {
     }
 });
 
-// Middleware
-app.use(cors()); // Enable CORS for all routes
-app.use(cors({
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true,
-}));
+
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 

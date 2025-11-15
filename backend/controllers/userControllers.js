@@ -1,6 +1,6 @@
 const sqlite3 = require("sqlite3").verbose();
 const path = require('path');
-const dbPath = path.join(__dirname, '../database/database.db');
+const dbPath = path.join(__dirname, '../database/devcollab.db');
 
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
@@ -298,14 +298,10 @@ module.exports.getUserActivity = (req, res) => {
             currentWorkTime += sessionMinutes;
         }
 
-        // Get tasks completed today
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const todayStr = today.toISOString().split('T')[0];
-
+        // Get total tasks completed by user (all time)
         db.get(
-            `SELECT COUNT(*) as count FROM Tasks WHERE completedById = ? AND DATE(completionDate) = ?`,
-            [id, todayStr],
+            `SELECT COUNT(*) as count FROM Tasks WHERE completedById = ? AND completed = 1`,
+            [id],
             (err, taskResult) => {
                 if (err) {
                     console.error('Error fetching tasks:', err);
@@ -327,7 +323,7 @@ module.exports.getUserActivity = (req, res) => {
                                 workTimeToday: currentWorkTime,
                                 lastBreakTime: user.lastBreakTime,
                                 lastStatusChange: user.lastStatusChange,
-                                tasksCompletedToday: taskResult?.count || 0,
+                                tasksCompletedTotal: taskResult?.count || 0,
                                 activeProjects: projectResult?.count || 0
                             }
                         });
