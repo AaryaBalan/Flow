@@ -103,10 +103,10 @@ export default function AuthPage() {
             {/* Header Section */}
             <div className="text-center mb-8 max-w-2xl">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-linear-to-br from-blue-600 to-indigo-600 mb-4 shadow-lg">
-                    <span className="text-2xl font-bold text-white">DC</span>
+                    <span className="text-2xl font-bold text-white">F</span>
                 </div>
                 <h1 className="text-4xl md:text-5xl font-bold text-slate-800 mb-3">
-                    Welcome to <span className="bg-linear-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Dev Collab</span>
+                    Welcome to <span className="bg-linear-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Flow</span>
                 </h1>
                 <p className="text-slate-600 text-lg">
                     Collaborate on projects, share ideas, and ship faster together

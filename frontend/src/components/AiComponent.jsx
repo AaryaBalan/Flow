@@ -19,7 +19,7 @@ const AiComponent = ({ userInput, onResponse }) => {
                     headers: {
                         "Authorization": `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
                         "HTTP-Referer": window.location.origin,
-                        "X-Title": "Dev Collab",
+                        "X-Title": "Flow",
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({

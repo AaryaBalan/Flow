@@ -78,9 +78,9 @@ const SetupPage = () => {
                 <div className="text-center mb-8">
                     <div className="flex items-center justify-center gap-3 mb-4">
                         <div className="w-12 h-12 rounded-xl bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg">
-                            <span className="text-xl font-bold text-white">DC</span>
+                            <span className="text-xl font-bold text-white">F</span>
                         </div>
-                        <h1 className="text-3xl font-bold text-slate-800">Dev Collab</h1>
+                        <h1 className="text-3xl font-bold text-slate-800">Flow</h1>
                     </div>
                     <h2 className="text-2xl font-bold text-slate-800 mb-2">Welcome, {user?.name}! 👋</h2>
                     <p className="text-slate-600">Let's set up your developer profile to get started</p>
@@ -374,7 +374,7 @@ const SetupPage = () => {
                 {/* Footer */}
                 <div className="text-center mt-6">
                     <p className="text-sm text-slate-500">
-                        Your information is secure and will only be used within Dev Collab
+                        Your information is secure and will only be used within Flow
                     </p>
                 </div>
             </div>

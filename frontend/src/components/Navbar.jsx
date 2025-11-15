@@ -67,10 +67,10 @@ const Navbar = () => {
 
                             <div className="flex items-center gap-2">
                                 <div className="w-8 h-8 rounded-lg bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center">
-                                    <span className="text-sm font-bold text-white">DC</span>
+                                    <span className="text-sm font-bold text-white">F</span>
                                 </div>
                                 <span className="text-xl font-bold text-slate-800 hidden sm:block">
-                                    Dev Collab
+                                    Flow
                                 </span>
                             </div>
                         </div>
@@ -109,9 +109,9 @@ const Navbar = () => {
                     <div className="flex items-center justify-between p-6 border-b border-slate-200">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg">
-                                <span className="text-lg font-bold text-white">DC</span>
+                                <span className="text-lg font-bold text-white">F</span>
                             </div>
-                            <span className="text-xl font-bold text-slate-800">Dev Collab</span>
+                            <span className="text-xl font-bold text-slate-800">Flow</span>
                         </div>
                         <button
                             onClick={() => setIsSidebarOpen(false)}

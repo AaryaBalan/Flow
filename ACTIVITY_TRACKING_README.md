@@ -2,7 +2,7 @@
 
 ## Overview
 
-A comprehensive real-time activity tracking and management system integrated into the Dev Collab project management platform. Track work time, manage breaks, view team member status, and get instant Microsoft Teams notifications.
+A comprehensive real-time activity tracking and management system integrated into the Flow project management platform. Track work time, manage breaks, view team member status, and get instant Microsoft Teams notifications.
 
 ## ✨ Features
 
@@ -68,7 +68,7 @@ A comprehensive real-time activity tracking and management system integrated int
 
    ```bash
    git clone <repository-url>
-   cd "Dev Collab"
+   cd "Flow"
    ```
 
 2. **Install backend dependencies**
@@ -354,7 +354,7 @@ describe("Activity Tracking", () => {
 
 ## 📝 License
 
-This feature is part of the Dev Collab project and follows the same license.
+This feature is part of the Flow project and follows the same license.
 
 ## 👥 Contributors
 
