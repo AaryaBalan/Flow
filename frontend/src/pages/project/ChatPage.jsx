@@ -5,18 +5,11 @@ import axios from 'axios'
 import toast from 'react-hot-toast'
 import io from 'socket.io-client'
 
-// Get the backend URL dynamically based on current host
-const getBackendURL = () => {
-    const hostname = window.location.hostname
-    // If accessing via network IP, use that IP for backend
-    if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-        return `http://${hostname}:3000`
-    }
-    return 'http://localhost:3000'
-}
+// Backend URL (Render)
+const BACKEND_URL = 'https://flow-backend-41wy.onrender.com'
 
-const API_BASE_URL = `${getBackendURL()}/api`
-const SOCKET_URL = getBackendURL()
+const API_BASE_URL = `${BACKEND_URL}/api`
+const SOCKET_URL = BACKEND_URL
 
 const ChatPage = () => {
     const { projectId } = useParams()
