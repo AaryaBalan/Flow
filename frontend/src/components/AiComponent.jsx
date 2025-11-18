@@ -23,7 +23,7 @@ const AiComponent = ({ userInput, onResponse }) => {
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
-                        "model": "meta-llama/llama-3.3-8b-instruct:free",
+                        "model": "meta-llama/llama-3.3-70b-instruct:free",
                         "messages": [
                             {
                                 "role": "user",
