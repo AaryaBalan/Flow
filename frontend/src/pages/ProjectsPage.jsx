@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, X, Users, Calendar, Clock, Coffee, Target, TrendingUp, Copy, Check, UserPlus, MoreVertical, Edit, Trash2, CheckCircle, AlertCircle } from 'lucide-react'
+import { Plus, X, Users, Calendar, Clock, Coffee, Target, TrendingUp, Copy, RotateCw, Check, UserPlus, MoreVertical, Edit, Trash2, CheckCircle, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import axios from 'axios'
 import { v4 as uuidv4 } from 'uuid'
@@ -503,9 +503,10 @@ const ProjectsPage = () => {
                     return new Date(dueDate) < new Date();
                 };
 
-                // Separate projects into active and overdue
-                const activeProjects = projects.filter(p => !isOverdue(p.dueDate));
-                const overdueProjects = projects.filter(p => isOverdue(p.dueDate));
+                // Separate projects into active, overdue and completed
+                const completedProjects = projects.filter(p => p.status && p.status.toLowerCase() === 'completed');
+                const activeProjects = projects.filter(p => p.status && p.status.toLowerCase() !== 'completed' && !isOverdue(p.dueDate));
+                const overdueProjects = projects.filter(p => p.status && p.status.toLowerCase() !== 'completed' && isOverdue(p.dueDate));
 
                 // Helper function to render project grid
                 const renderProjectsGrid = (projectList, isOverdueSection = false) => (
@@ -607,6 +608,54 @@ const ProjectsPage = () => {
                                                                                 <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                                                                 Delete
                                                                             </button>
+                                                                            {/* Mark Complete / Reopen - owner-only actions */}
+                                                                            {project.authorId == currentUser?.id && project.status && project.status.toLowerCase() !== 'completed' && (
+                                                                                <button
+                                                                                    onClick={async (e) => {
+                                                                                        e.preventDefault()
+                                                                                        if (!window.confirm('Mark this project as completed?')) return
+                                                                                        try {
+                                                                                            const resp = await axios.put(`${API_BASE_URL}/api/projects/${project.id}`, { status: 'Completed', userId: currentUser.id })
+                                                                                            if (resp.data.success) {
+                                                                                                toast.success('Project marked as completed')
+                                                                                                await fetchUserProjects()
+                                                                                                setOpenMenuId(null)
+                                                                                            }
+                                                                                        } catch (err) {
+                                                                                            console.error('Error marking project completed', err)
+                                                                                            toast.error(err.response?.data?.message || 'Failed to mark project completed')
+                                                                                        }
+                                                                                    }}
+                                                                                    className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-left text-xs sm:text-sm text-blue-600 hover:bg-blue-50 flex items-center gap-1.5 sm:gap-2"
+                                                                                >
+                                                                                    <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                                                                    Mark Complete
+                                                                                </button>
+                                                                            )}
+
+                                                                            {project.authorId == currentUser?.id && project.status && project.status.toLowerCase() === 'completed' && (
+                                                                                <button
+                                                                                    onClick={async (e) => {
+                                                                                        e.preventDefault()
+                                                                                        if (!window.confirm('Reopen this project (mark as active)?')) return
+                                                                                        try {
+                                                                                            const resp = await axios.put(`${API_BASE_URL}/api/projects/${project.id}`, { status: 'Active', userId: currentUser.id })
+                                                                                            if (resp.data.success) {
+                                                                                                toast.success('Project reopened')
+                                                                                                await fetchUserProjects()
+                                                                                                setOpenMenuId(null)
+                                                                                            }
+                                                                                        } catch (err) {
+                                                                                            console.error('Error reopening project', err)
+                                                                                            toast.error(err.response?.data?.message || 'Failed to reopen project')
+                                                                                        }
+                                                                                    }}
+                                                                                    className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-left text-xs sm:text-sm text-green-600 hover:bg-green-50 flex items-center gap-1.5 sm:gap-2"
+                                                                                >
+                                                                                    <RotateCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                                                                    Reopen Project
+                                                                                </button>
+                                                                            )}
                                                                         </div>
                                                                     )}
                                                                 </div>
@@ -759,6 +808,16 @@ const ProjectsPage = () => {
                                     Overdue Projects
                                 </h2>
                                 {renderProjectsGrid(overdueProjects, true)}
+                            </div>
+                        )}
+                        {/* Completed Projects Section */}
+                        {completedProjects.length > 0 && (
+                            <div className="mt-8 sm:mt-12">
+                                <h2 className="text-xl sm:text-2xl font-bold text-slate-800 mb-4 sm:mb-6 flex items-center gap-2">
+                                    <CheckCircle className="w-6 h-6 text-blue-600" />
+                                    Completed Projects
+                                </h2>
+                                {renderProjectsGrid(completedProjects, false)}
                             </div>
                         )}
                     </>

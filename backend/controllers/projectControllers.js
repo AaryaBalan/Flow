@@ -522,6 +522,12 @@ exports.updateProject = (req, res) => {
         values.push(finalDueDate);
     }
 
+    // Allow updating project status (e.g., 'Completed')
+    if (req.body.status !== undefined) {
+        updates.push('status = ?');
+        values.push(req.body.status);
+    }
+
     if (updates.length === 0) {
         return res.status(400).json({
             success: false,
