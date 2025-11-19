@@ -104,14 +104,17 @@ const StatsPage = () => {
         })
 
         // Add member activities
+        // Note: backend returns `id` (not `userId`) and `joinedAt` may be missing for some entries.
         membersList.slice(0, 5).forEach(member => {
+            const joinedAt = member.joinedAt || member.joined_at || null
+            const timestamp = joinedAt ? new Date(joinedAt).getTime() : Date.now()
             activities.push({
-                id: `member-${member.userId}`,
-                user: member.name,
-                action: 'joined the project',
+                id: `member-${member.id}`,
+                user: member.name || member.displayName || 'Unknown',
+                action: member.invitationStatus === 'pending' ? 'requested to join' : 'joined the project',
                 target: '',
-                time: formatTimeAgo(member.joinedAt),
-                timestamp: new Date(member.joinedAt).getTime(),
+                time: joinedAt ? formatTimeAgo(joinedAt) : 'Just now',
+                timestamp: timestamp,
                 icon: UserPlus,
                 color: 'purple'
             })
